@@ -1,54 +1,413 @@
-<!-- server/templates/dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MindMentor Dashboard</title>
-
-  <!-- Stylesheet -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <meta charset="UTF-8">
+  <title>Dashboard | MindMentor</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
   <style>
-    .redirect-btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color: #6c63ff;
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8fafc;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #1e293b;
+    }
+
+    .greeting {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: #475569;
+    }
+
+    .last-mood {
+      background: #eef2ff;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 2rem;
+    }
+
+    .mood-history {
+      margin-top: 2rem;
+    }
+
+    .mood-entry {
+      background: #f1f5f9;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-left: 5px solid #6366f1;
+      border-radius: 6px;
+    }
+
+    .actions {
+      margin-top: 2rem;
+      display: flex;
+      gap: 1rem;
+    }
+
+    .actions a {
+      padding: 0.75rem 1.5rem;
+      background: #6366f1;
       color: white;
       text-decoration: none;
-      border-radius: 8px;
-      font-weight: bold;
-      transition: 0.3s ease;
+      border-radius: 6px;
+      transition: all 0.2s ease-in-out;
     }
-    .redirect-btn:hover {
-      background-color: #574fd6;
+
+    .actions a:hover {
+      background: #4f46e5;
+    }
+
+    .streak {
+      background: #ffe4b5;
+      padding: 10px 15px;
+      border-radius: 10px;
+      color: #b45309;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      user-select: none;
+      text-align: center;
+    }
+
+    .quote-block {
+      font-style: italic;
+      color: #334155;
+      background: #f0fdf4;
+      padding: 1rem;
+      border-left: 5px solid #10b981;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .journal-floating {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 250px;
+      background: #fff7ed;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .journal-floating textarea {
+      width: 100%;
+      height: 80px;
+      padding: 0.5rem;
+      font-size: 14px;
+      resize: none;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .journal-floating button {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 0.5rem;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+    }
+
+    .journal-floating button:hover {
+      background: #059669;
+    }
+
+    .mood-summary {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #e0f2fe;
+      border-radius: 10px;
+    }
+
+    #moodHistoryDrawer {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 350px;
+      height: 100%;
+      background: white;
+      box-shadow: -4px 0 12px rgba(0,0,0,0.2);
+      overflow-y: auto;
+      padding: 1rem;
+      transition: right 0.4s ease;
+      z-index: 9999;
+    }
+
+    #closeDrawerBtn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      float: right;
+      cursor: pointer;
+    }
+
+    #moodHistoryBanner {
+      cursor: pointer;
+      margin-top: 2rem;
     }
   </style>
 </head>
-
 <body>
-  <h1>Welcome to your Dashboard 👋</h1>
+  <div class="container">
+    <h1>{{ greeting }}, {{ username }} 👋</h1>
+    
+    {% if quote %}
+    <blockquote class="quote-block">"{{ quote }}"</blockquote>
+    {% endif %}
 
-  <div id="lastMood">
-    <h2>🧠 Last Predicted Mood:</h2>
-    <p id="moodResult">Loading...</p>
+    {% if streak > 0 %}
+    <p class="streak">🔥 You're on a <strong>{{ streak }}-day streak</strong>! Keep it up! 💪</p>
+    {% else %}
+    <p class="streak">No streak yet. Start tracking your mood daily to build one! 🚀</p>
+    {% endif %}
+
+    {% if last_mood %}
+    <div class="last-mood">
+      <h3>🧠 Last Mood Check-in</h3>
+      <p><strong>Mood:</strong> {{ last_mood.mental_state or "N/A" }}</p>
+      {% if last_mood.journal_entry %}
+        <p><strong>Journal Entry:</strong></p>
+        <blockquote>{{ last_mood.journal_entry }}</blockquote>
+      {% endif %}
+      <ul>
+        {% for tip in last_mood.suggestions %}
+        <li>{{ tip }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% else %}
+    <p>No mood check-ins yet. Let's do your first one! 📝</p>
+    {% endif %}
+
+    <div class="actions">
+      <a href="/mood-tracker">Add Mood Check-in</a>
+      <a href="/logout">Logout</a>
+    </div>
+
+<div id="moodHistoryBanner" style="cursor: pointer; background: #e0f2fe; padding: 1rem; border-radius: 8px; margin-top: 2rem;">
+  <h3>📅 Your Mood History (click to expand)</h3>
+</div>
+
+<!-- Mood History Content -->
+<!-- Mood History Content -->
+<div id="moodHistoryContent" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+  {% if moods %}
+    {% for mood in moods %}
+    <div class="mood-entry" style="margin: 1rem 0; padding: 1rem; background: #f1f5f9; border-left: 4px solid #6366f1; border-radius: 6px;">
+      <p><strong>Mood:</strong> {{ mood.mental_state }}</p>
+      <p><strong>Time:</strong> 
+        {% if mood.timestamp_display %} 
+          {{ mood.timestamp_display }} 
+        {% else %}
+          {{ mood.timestamp.strftime('%b %d, %Y %I:%M %p') if mood.timestamp and not mood.timestamp is string else mood.timestamp }}
+        {% endif %}
+      </p>
+      {% if mood.journal_entry %}
+        <p><em>Journal:</em> {{ mood.journal_entry }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <p style="padding: 1rem;">No mood history yet.</p>
+  {% endif %}
+</div>
+
+<!-- Mood Summary Section -->
+<!-- Mood Summary Section -->
+{% if mood_summary %}
+<div class="mood-summary">
+  <h3 id="toggle-summary" style="cursor: pointer; color: #6366f1;">
+    📊 Mood Summary <span id="toggle-icon">▼</span>
+  </h3>
+  <div id="summary-content" style="display: none; padding-left: 1rem;">
+    <ul>
+      {% for item in mood_summary %}
+        <li>
+          <strong>{{ item.mood }}</strong> 
+          <span style="color: #64748b;">({{ item.count }} check-in{{ 's' if item.count > 1 else '' }})</span>
+        </li>
+      {% endfor %}
+    </ul>
   </div>
+</div>
+{% endif %}
 
-  <!-- Pie Chart Container -->
-  <div style="width: 300px; height: 300px; margin: 20px auto;">
-    <canvas id="moodChart"></canvas>
+
+  <form id="journalForm" class="journal-floating" method="POST" action="/api/mood/journal">
+    <textarea name="journal_entry" placeholder="📝 Write your thoughts..." required></textarea>
+    <button type="submit">Save Entry</button>
+  </form>
+
+  <div id="moodHistoryDrawer" aria-hidden="true">
+    <button id="closeDrawerBtn">✖️</button>
+    <h3 style="margin-top: 2rem;">Your Mood History</h3>
+    {% if moods %}
+      {% for mood in moods %}
+      <div style="margin-bottom: 1rem; padding: 0.5rem; border-left: 4px solid #6366f1; background: #f1f5f9; border-radius: 6px;">
+        <p><strong>Mood:</strong> {{ mood.mental_state }}</p>
+        <p><strong>Time:</strong> {{ mood.timestamp }}</p>
+        {% if mood.journal_entry %}
+          <p><strong>Journal:</strong> {{ mood.journal_entry }}</p>
+        {% endif %}
+        <p>ID: {{ mood.id or "No ID found" }}</p>
+
+        <button class="delete-btn" data-id="{{ mood.id }}" title="Delete this entry">🗑️</button>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p>No mood history yet.</p>
+    {% endif %}
+    
   </div>
+  <div class="mood-chart-section">
+   <h3>📈 Mood Trend</h3>
+   <canvas id="moodChart" height="120"></canvas>
+   <!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Only proceed if we have data and a chart element
+  const moodDataElement = document.getElementById('moodData');
+  const chartCanvas = document.getElementById('moodChart');
+  
+  if (moodDataElement && chartCanvas) {
+    const moods = JSON.parse(moodDataElement.textContent);
+    
+    if (moods && moods.length > 0) {
+      // Process data for chart
+      const labels = moods.map(m => m.timestamp_day || '');
+      const dataPoints = moods.map(m => {
+        // Convert mood states to numerical values
+        const moodScale = {
+          'Very Happy': 5, 'Happy': 4, 'Neutral': 3, 
+          'Sad': 2, 'Very Sad': 1, 'Anxious': 2, 
+          'Stressed': 1, 'Excited': 4
+        };
+        return moodScale[m.mental_state] || 3; // Default to neutral
+      });
 
-  <!-- Redirect Button -->
-  <div style="text-align: center;">
-    <a href="{{ url_for('mood_tracker') }}" class="redirect-btn">📝 Go to Mood Tracker</a>
+      // Create chart
+      new Chart(chartCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Mood Level',
+            data: dataPoints,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: '#6366f1'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              min: 1,
+              max: 5,
+              ticks: {
+                callback: function(value) {
+                  // Map numbers back to mood labels
+                  const moodLabels = {
+                    1: 'Very Sad', 2: 'Sad', 3: 'Neutral',
+                    4: 'Happy', 5: 'Very Happy'
+                  };
+                  return moodLabels[value] || value;
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const mood = moods[context.dataIndex];
+                  return [
+                    `Mood: ${mood.mental_state}`,
+                    `Time: ${mood.timestamp_display || mood.timestamp}`,
+                    mood.journal_entry ? `Note: ${mood.journal_entry.substring(0, 30)}...` : ''
+                  ];
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+});
+</script>
+<script id="moodData" type="application/json">
+  {{ moods|tojson }}
+</script>
+
+
+
+<div class="recent-journals">
+  <h3>📝 Recent Reflections</h3>
+  {% set valid_journals = moods|selectattr('journal_entry')|list %}
+  
+  {% if valid_journals %}
+    <ul>
+      {% for mood in valid_journals[:3] %}
+        <li class="journal-item">
+          <strong>{{ mood.timestamp.strftime('%a') }}:</strong>
+          <blockquote>{{ mood.journal_entry }}</blockquote>
+          <span class="mood-badge">{{ mood.mental_state }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      ✏️ No reflections yet. 
+      <a href="/mood-tracker">Add your first journal entry</a>
+    </div>
+  {% endif %}
+</div>
+{% if achievements %}
+  <div class="badge-container">
+    <h3>🏅 Your Achievement Badges</h3>
+    <ul>
+      {% for badge in achievements %}
+        <li>{{ badge }}</li>
+      {% endfor %}
+    </ul>
   </div>
+{% endif %}
 
-  <!-- Dashboard JS -->
-  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+
+<script>
+  document.getElementById('moodHistoryBanner').addEventListener('click', function() {
+    const content = document.getElementById('moodHistoryContent');
+    content.style.maxHeight = content.style.maxHeight === '0px' ? 
+      `${content.scrollHeight}px` : '0px';
+  });
+  
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
 </body>
 </html>
