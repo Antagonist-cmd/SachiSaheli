@@ -1,18 +1,102 @@
-<form id="moodForm">
-    <label>Stress Level:</label>
-    <input type="number" id="stress" name="stress_level" required><br>
-  
-    <label>Sleep Hours:</label>
-    <input type="number" id="sleep" name="sleep_hours" required><br>
-  
-    <label>Social Interaction:</label>
-    <input type="number" id="social" name="social_interaction" required><br>
-  
-    <button type="submit">Predict Mood</button>
-  </form>
-  
-  <div id="result" style="margin-top: 20px; font-weight: bold;"></div>
-  
-  <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Track and analyze your mood patterns with MindMentor" />
+  <title>MindMentor - Daily Mood Check-in</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>🧠 MindMentor Mood Tracker</h1>
+      <p class="subtitle">Track your mental wellbeing daily</p>
+    </header>
 
-  
+    <form id="moodForm" class="mood-form" aria-labelledby="form-heading">
+      <h2 id="form-heading" class="visually-hidden">Mood Assessment</h2>
+      
+      <fieldset class="form-section">
+        <legend>Physical Indicators</legend>
+        
+        <div class="form-group">
+          <label for="stress">😣 Stress Level (1-10)</label>
+          <input type="range" id="stress" name="stress_level" min="1" max="10" value="5" required />
+          <output for="stress">5</output>
+        </div>
+
+        <div class="form-group">
+          <label for="sleep">😴 Sleep Hours (0-24)</label>
+          <input type="number" id="sleep" name="sleep_hours" min="0" max="24" step="0.5" required />
+        </div>
+
+        <div class="form-group">
+          <label for="social">🗣️ Social Interaction (hours)</label>
+          <input type="number" id="social" name="social_interaction" min="0" max="24" step="0.5" required />
+        </div>
+
+        <div class="form-group">
+          <label for="appetite">🍽️ Appetite (1-10)</label>
+          <input type="range" id="appetite" name="appetite" min="1" max="10" value="5" required />
+          <output for="appetite">5</output>
+        </div>
+      </fieldset>
+
+      <fieldset class="form-section">
+        <legend>Mental Indicators</legend>
+        
+        <div class="form-group">
+          <label for="energy">⚡ Energy Level (1-10)</label>
+          <input type="range" id="energy" name="energy" min="1" max="10" value="5" required />
+          <output for="energy">5</output>
+        </div>
+
+        <div class="form-group">
+          <label for="motivation">💭 Motivation (1-10)</label>
+          <input type="range" id="motivation" name="motivation" min="1" max="10" value="5" required />
+          <output for="motivation">5</output>
+        </div>
+
+        <div class="form-group">
+          <label for="concentration">🎯 Concentration (1-10)</label>
+          <input type="range" id="concentration" name="concentration" min="1" max="10" value="5" required />
+          <output for="concentration">5</output>
+        </div>
+
+
+      </fieldset>
+        <div class="form-group">
+        <label for="journal_entry">📝 Journal Entry (optional)</label>
+        <textarea id="journal_entry" name="journal_entry" rows="4" placeholder="Write about your day..."></textarea>
+        </div>
+
+      <button type="submit" class="submit-btn">
+        <span aria-hidden="true">🔮</span> Analyze My Mood
+      </button>
+    </form>
+
+    <section id="results" class="results" aria-live="polite" hidden>
+      <h2>Your Mood Analysis</h2>
+      <div id="result" class="result-output"></div>
+      <div id="suggestions" class="suggestions"></div>
+      <button id="saveBtn" class="secondary-btn">💾 Save This Entry</button>
+    </section>
+  </main>
+
+  <script>
+    // Sync range inputs with output labels
+    document.querySelectorAll('input[type="range"]').forEach(slider => {
+      const output = slider.nextElementSibling;
+      if (output && output.tagName === "OUTPUT") {
+        output.value = slider.value;
+        slider.addEventListener('input', () => {
+          output.value = slider.value;
+        });
+      }
+    });
+  </script>
+
+  <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
+</body>
+</html>
