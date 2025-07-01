@@ -43,32 +43,34 @@ def checkin():
 
     try:
         data = request.get_json()
-        prediction, suggestions = predict_mood(data)
+        prediction_result = predict_mood(data)
 
+        predicted_tags = prediction_result["tags"]
 
         checkin_data = {
             "user_id": session["user_id"],
-            "stress_level": data.get("stress_level"),
-            "sleep_hours": data.get("sleep_hours"),
-            "social_interaction": data.get("social_interaction"),
-            "appetite": data.get("appetite"),
-            "energy": data.get("energy"),
-            "motivation": data.get("motivation"),
-            "concentration": data.get("concentration"),
-            "mental_state": prediction,
-            "suggestions": suggestions,
+            "age": data["age"],
+            "gender": data["gender"],
+            "stress_level": data["stress_level"],
+            "sleep_hours": data["sleep_hours"],
+            "sociability": data["sociability"],
+            "anxiety": data["anxiety"],
+            "emotional_stability": data["emotional_stability"],
+            "self_esteem": data["self_esteem"],
+            "motivation": data["motivation"],
+            "eating_habits": data["eating_habits"],
+            "diagnosis_tags": predicted_tags,
             "journal_entry": data.get("journal_entry"),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(datetime.UTC)
         }
-    
-        # Save to Supabase
+
         supabase.table("mood_checkins").insert(checkin_data).execute()
 
-        return jsonify({"message": "Mood check-in saved ✅"})
-    
+        return jsonify({"message": "Check-in saved ✅", "predicted_tags": predicted_tags})
     except Exception as e:
         print("🔥 Check-in error:", str(e))
         return jsonify({"error": "Failed to save mood check-in"}), 400
+
 
 
 
@@ -116,11 +118,8 @@ def predict():
 
     data = request.get_json()
     try:
-        prediction, suggestions = predict_mood(data)
-        return jsonify({
-            "mental_state": prediction,
-            "suggestions": suggestions
-        }), 200
+        prediction = predict_mood(data)
+        return jsonify(prediction), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -147,4 +146,3 @@ def journal():
     except Exception as e:
         print("📝 Journal save error:", str(e))
         return jsonify({"error": "Failed to save journal entry"}), 500
-

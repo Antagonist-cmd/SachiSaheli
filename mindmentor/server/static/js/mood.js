@@ -1,105 +1,51 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("moodForm");
-  const resultDiv = document.getElementById("result");
-  const suggestionDiv = document.getElementById("suggestions");
-  const resultsSection = document.getElementById("results");
-  const saveBtn = document.getElementById("saveBtn");
+  const resultBox = document.getElementById("predictionResult");
 
-  if (!form || !resultDiv || !suggestionDiv || !resultsSection || !saveBtn) {
-    console.error("⛔ Required DOM elements not found!");
-    return;
-  }
+  if (!form) return;
 
-  let latestPrediction = null;  // Store the last prediction data for saving
-
-  form.addEventListener("submit", async function (e) {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Collect form input values
-    const formData = new FormData(form);
-    const data = {};
-    for (let [key, value] of formData.entries()) {
-      // Convert numeric fields to numbers, keep others as strings
-      data[key] = key === "journal_entry" ? value : parseFloat(value);
-    }
-    
-    data["journal_entry"] = form.querySelector("#journal_entry").value || "";
-    // Add journal entry if present
-    const journalEntry = form.querySelector("#journal_entry").value.trim();
-    if (journalEntry) {
-      data.journal_entry = journalEntry;
-    }
+    const data = {
+      age: form.age.value,
+      gender: form.gender.value,
+      stress_level: form.stress_level.value,
+      sleep_hours: form.sleep_hours.value,
+      sociability: form.sociability.value,
+      anxiety: form.anxiety.value,
+      emotional_stability: form.emotional_stability.value,
+      self_esteem: form.self_esteem.value,
+      motivation: form.motivation.value,
+      eating_habits: form.eating_habits.value,
+      journal_entry: form.journal_entry.value
+    };
 
     try {
-      // Predict mood
-      const response = await fetch("/api/mood/predict", {
+      const res = await fetch("/api/mood/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
       });
 
-      const result = await response.json();
+      const result = await res.json();
 
-      if (result.mental_state) {
-        // Display mood & suggestions
-        resultDiv.innerText = `🧠 Mental State: ${result.mental_state}`;
-        suggestionDiv.innerHTML =
-          "<h3>Suggestions 💡</h3><ul>" +
-          result.suggestions.map((s) => `<li>${s}</li>`).join("") +
-          "</ul>";
-
-        // Show results section
-        resultsSection.hidden = false;
-
-        // Save prediction data for later save button click
-        latestPrediction = {
-          ...data,
-          mental_state: result.mental_state,
-          suggestions: result.suggestions,
-          // Journal entry is already included in data from formData
-        };
+      if (res.ok) {
+        const tags = result.predicted_tags || [];
+        resultBox.innerHTML = `
+          <h3>🧠 Mental Health Insights:</h3>
+          ${tags.length > 0 ? tags.map(tag => `<span class="tag">${tag}</span>`).join(" ") 
+                            : "<p>No diagnosis tags predicted.</p>"}
+        `;
+        resultBox.style.display = "block";
       } else {
-        resultDiv.innerText = "⚠️ Failed to predict mental state.";
-        suggestionDiv.innerHTML = "";
-        resultsSection.hidden = true;
-        latestPrediction = null;
+        resultBox.innerHTML = `<p style="color: red;">❌ ${result.error || "Something went wrong"}</p>`;
+        resultBox.style.display = "block";
       }
-    } catch (error) {
-      console.error("🔥 Error during prediction:", error);
-      resultDiv.innerText = "🚨 Something went wrong!";
-      suggestionDiv.innerHTML = "";
-      resultsSection.hidden = true;
-      latestPrediction = null;
-    }
-  });
-
-  saveBtn.addEventListener("click", async function () {
-    if (!latestPrediction) {
-      alert("Please fill out the form and analyze your mood before saving!");
-      return;
-    }
-
-    try {
-      const saveResponse = await fetch("/api/mood/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(latestPrediction),
-      });
-
-      if (saveResponse.ok) {
-        alert("✅ Mood check-in saved successfully!");
-        // Optionally reset form and hide results
-        form.reset();
-        resultsSection.hidden = true;
-        latestPrediction = null;
-        resultDiv.innerText = "";
-        suggestionDiv.innerHTML = "";
-      } else {
-        alert("⚠️ Failed to save mood check-in. Please try again.");
-      }
-    } catch (error) {
-      console.error("🔥 Error during saving check-in:", error);
-      alert("🚨 Something went wrong while saving your mood check-in.");
+    } catch (err) {
+      console.error("🔥 Prediction error:", err);
+      resultBox.innerHTML = `<p style="color: red;">🚨 Server error. Try again later.</p>`;
+      resultBox.style.display = "block";
     }
   });
 });

@@ -69,3 +69,14 @@
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
 }
+
+   .delete-mood-btn {
+  transition: all 0.2s;
+}
+.delete-mood-btn:hover {
+  background: #fecaca !important;
+  transform: scale(1.1);
+}
+.mood-entry {
+  transition: opacity 0.3s ease;
+}
