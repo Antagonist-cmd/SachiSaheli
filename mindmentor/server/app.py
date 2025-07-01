@@ -76,38 +76,6 @@ def calculate_streak(mood_entries):
 
     return streak
 
-def get_earned_badges(mood_entries):
-    badges = []
-    if not mood_entries:
-        return badges
-
-    # Badge 1: 📓 Reflective Soul (3+ journal entries)
-    journal_count = sum(1 for m in mood_entries if m.get("journal_entry"))
-    if journal_count >= 3:
-        badges.append("📓 Reflective Soul")
-
-    # Badge 2: 🔁 Consistency Hero (7-day check-in streak)
-    if calculate_streak(mood_entries) >= 7:
-        badges.append("🔁 Consistency Hero")
-
-    # Badge 3: 💪 Resilience Champ (5+ check-ins in the last 7 days)
-    today = datetime.now(datetime.UTC).date()
-    last_7_days = [m for m in mood_entries if "timestamp_obj" in m and m["timestamp_obj"].date() >= today - timedelta(days=6)]
-    if len(last_7_days) >= 5:
-        badges.append("💪 Resilience Champ")
-
-    # Badge 4: 🧘 Zen Master (3+ Neutral days in a row)
-    neutral_streak = 0
-    for m in mood_entries:
-        if m.get("mental_state") == "Neutral":
-            neutral_streak += 1
-            if neutral_streak >= 3:
-                badges.append("🧘 Zen Master")
-                break
-        else:
-            neutral_streak = 0
-
-    return badges
 
 @app.route("/dashboard")
 def dashboard():
@@ -216,7 +184,23 @@ def dashboard():
         return render_template("dashboard.html", username=session.get("username", "User"), moods=[], last_mood=None, streak=0)
 
 
-
+@app.route('/delete_mood/<mood_id>', methods=['DELETE'])
+def delete_mood(mood_id):
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    try:
+        # Delete from database
+        supabase.table("mood_checkins") \
+               .delete() \
+               .eq("id", mood_id) \
+               .eq("user_id", session["user_id"]) \
+               .execute()
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"Delete error: {str(e)}")
+        return jsonify({"error": "Deletion failed"}), 500
 
 
 

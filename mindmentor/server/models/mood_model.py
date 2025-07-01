@@ -1,34 +1,33 @@
-import pickle
+# server/models/mood_model.py
+import joblib
+import json
+import os
 import numpy as np
 
-# Load model and scaler once, on import
-with open("ml/model.pkl", "rb") as f:
-    model = pickle.load(f)
+# Load model, MultiLabelBinarizer, and metadata
+MODEL_PATH = os.path.join("ml", "mindmentor_model.joblib")
+MLB_PATH = os.path.join("ml", "mindmentor_mlb.joblib")
+META_PATH = os.path.join("ml", "model_metadata.json")
 
-with open("ml/scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
+model = joblib.load(MODEL_PATH)
+mlb = joblib.load(MLB_PATH)
 
-FEATURES = ["stress_level", "sleep_hours", "social_interaction", "appetite", "energy", "motivation", "concentration"]
+with open(META_PATH, "r") as f:
+    metadata = json.load(f)
+
+FEATURES = metadata["features"]
 
 def predict_mood(data: dict):
-    # Extract features from input
-    feature_values = [data.get(f, 0) for f in FEATURES]
+    try:
+        # Extract feature values in the correct order
+        input_values = [float(data[feature]) for feature in FEATURES]
+        X = np.array([input_values])
 
-    # Scale input features
-    scaled = scaler.transform([feature_values])
+        preds = model.predict(X)
+        tags = mlb.inverse_transform(preds)[0]
 
-    # Predict mood label
-    prediction = model.predict(scaled)[0]
+        return {"tags": list(tags)}
 
-    # For simplicity, here you can have a fixed mapping of suggestions based on predicted mood
-    suggestions_map = {
-        "Happy": ["Keep up the great work!", "Maintain your routine!"],
-        "Stressed": ["Try meditation", "Take short breaks"],
-        "Depressed": ["Reach out to friends", "Consider professional help"],
-        "Anxious": ["Practice breathing exercises", "Limit caffeine intake"],
-        "Neutral": ["Stay active", "Engage in hobbies"]
-    }
-    suggestions = suggestions_map.get(prediction, [])
-
-    return prediction, suggestions
-
+    except Exception as e:
+        print("🔥 Prediction error:", str(e))
+        return {"tags": []}

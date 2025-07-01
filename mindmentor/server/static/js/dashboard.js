@@ -131,3 +131,63 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+document.addEventListener("DOMContentLoaded", () => {
+  const settingsToggle = document.getElementById("settingsToggle");
+  const settingsDropdown = document.getElementById("settingsDropdown");
+  const themeToggleBtn = document.getElementById("toggleTheme");
+
+  if (settingsToggle && settingsDropdown) {
+    settingsToggle.addEventListener("click", (e) => {
+      e.stopPropagation(); // Prevent outside click from firing immediately
+      const isOpen = settingsDropdown.style.display === "block";
+      settingsDropdown.style.display = isOpen ? "none" : "block";
+      console.log("Settings menu toggled:", !isOpen);
+    });
+
+    // Close on outside click
+    document.addEventListener("click", (e) => {
+      if (!settingsDropdown.contains(e.target) && e.target !== settingsToggle) {
+        settingsDropdown.style.display = "none";
+        console.log("Settings menu closed by outside click");
+      }
+    }, { passive: true });
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.body.classList.toggle("dark-mode");
+      const theme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+      localStorage.setItem("theme", theme);
+      console.log("Theme toggled:", theme);
+    });
+  }
+
+  // Load saved theme
+  const savedTheme = localStorage.getItem("theme");
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark-mode");
+  }
+});
+// Add delete buttons to each mood entry
+document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.delete-mood-btn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+      const entry = this.closest('.mood-entry');
+      if (confirm('Delete this mood entry?')) {
+        try {
+          const response = await fetch(`/delete_mood/${entry.dataset.id}`, {
+            method: 'DELETE'
+          });
+          
+          if (response.ok) {
+            entry.style.opacity = '0';
+            setTimeout(() => entry.remove(), 300);
+          }
+        } catch (error) {
+          console.error('Delete failed:', error);
+        }
+      }
+    });
+  });
+});

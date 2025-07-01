@@ -2,10 +2,176 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Track and analyze your mood patterns with MindMentor" />
   <title>MindMentor - Daily Mood Check-in</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" />
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-light: #e0e7ff;
+      --secondary: #10b981;
+      --text: #1f2937;
+      --light-bg: #f9fafb;
+      --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--light-bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    
+    .header h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .subtitle {
+      color: #6b7280;
+      font-size: 1.1rem;
+    }
+    
+    .mood-form {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #374151;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    
+    .rating-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .rating-value {
+      min-width: 30px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 0.85rem 1.75rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      width: 100%;
+    }
+    
+    .btn:hover {
+      background-color: #4f46e5;
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+      background-color: white;
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    
+    .btn-secondary:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .results {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: var(--card-shadow);
+      margin-top: 2rem;
+      animation: fadeIn 0.4s ease-out;
+    }
+    
+    .tag {
+      display: inline-block;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      padding: 0.5rem 1rem;
+      margin: 0.5rem 0.5rem 0.5rem 0;
+      border-radius: 20px;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    .suggestion-card {
+      background: #f0fdf4;
+      border-left: 4px solid var(--secondary);
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
   <main class="container">
@@ -14,89 +180,103 @@
       <p class="subtitle">Track your mental wellbeing daily</p>
     </header>
 
-    <form id="moodForm" class="mood-form" aria-labelledby="form-heading">
-      <h2 id="form-heading" class="visually-hidden">Mood Assessment</h2>
+    <form id="moodCheckinForm" class="mood-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="age">Your Age</label>
+          <input type="number" id="age" name="age" placeholder="e.g. 28" min="13" max="100" required />
+        </div>
+        
+        <div class="form-group">
+          <label for="gender">Gender</label>
+          <select id="gender" name="gender" required>
+            <option value="" disabled selected>Select your gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+            <option value="prefer-not-to-say">Prefer not to say</option>
+          </select>
+        </div>
+      </div>
       
-      <fieldset class="form-section">
-        <legend>Physical Indicators</legend>
+      <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Rate Your Current State (1-10)</h3>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="stress_level">Stress Level</label>
+          <div class="rating-container">
+            <input type="range" id="stress_level" name="stress_level" min="1" max="10" value="5" />
+            <span class="rating-value" id="stress_value">5</span>
+          </div>
+        </div>
         
         <div class="form-group">
-          <label for="stress">😣 Stress Level (1-10)</label>
-          <input type="range" id="stress" name="stress_level" min="1" max="10" value="5" required />
-          <output for="stress">5</output>
+          <label for="sleep_hours">Sleep Hours (Last Night)</label>
+          <input type="number" id="sleep_hours" name="sleep_hours" min="0" max="24" step="0.5" placeholder="e.g. 7.5" required />
         </div>
-
+      </div>
+      
+      <div class="form-grid">
         <div class="form-group">
-          <label for="sleep">😴 Sleep Hours (0-24)</label>
-          <input type="number" id="sleep" name="sleep_hours" min="0" max="24" step="0.5" required />
+          <label for="social_interaction">Social Interaction</label>
+          <div class="rating-container">
+            <input type="range" id="social_interaction" name="social_interaction" min="1" max="10" value="5" />
+            <span class="rating-value" id="social_value">5</span>
+          </div>
         </div>
-
-        <div class="form-group">
-          <label for="social">🗣️ Social Interaction (hours)</label>
-          <input type="number" id="social" name="social_interaction" min="0" max="24" step="0.5" required />
-        </div>
-
-        <div class="form-group">
-          <label for="appetite">🍽️ Appetite (1-10)</label>
-          <input type="range" id="appetite" name="appetite" min="1" max="10" value="5" required />
-          <output for="appetite">5</output>
-        </div>
-      </fieldset>
-
-      <fieldset class="form-section">
-        <legend>Mental Indicators</legend>
         
         <div class="form-group">
-          <label for="energy">⚡ Energy Level (1-10)</label>
-          <input type="range" id="energy" name="energy" min="1" max="10" value="5" required />
-          <output for="energy">5</output>
+          <label for="motivation">Motivation Level</label>
+          <div class="rating-container">
+            <input type="range" id="motivation" name="motivation" min="1" max="10" value="5" />
+            <span class="rating-value" id="motivation_value">5</span>
+          </div>
         </div>
-
-        <div class="form-group">
-          <label for="motivation">💭 Motivation (1-10)</label>
-          <input type="range" id="motivation" name="motivation" min="1" max="10" value="5" required />
-          <output for="motivation">5</output>
-        </div>
-
-        <div class="form-group">
-          <label for="concentration">🎯 Concentration (1-10)</label>
-          <input type="range" id="concentration" name="concentration" min="1" max="10" value="5" required />
-          <output for="concentration">5</output>
-        </div>
-
-
-      </fieldset>
-        <div class="form-group">
-        <label for="journal_entry">📝 Journal Entry (optional)</label>
-        <textarea id="journal_entry" name="journal_entry" rows="4" placeholder="Write about your day..."></textarea>
-        </div>
-
-      <button type="submit" class="submit-btn">
-        <span aria-hidden="true">🔮</span> Analyze My Mood
-      </button>
+      </div>
+      
+      <div class="form-group">
+        <label for="journal_entry">Today's Reflection</label>
+        <textarea id="journal_entry" name="journal_entry" rows="4" placeholder="How are you feeling today? What's on your mind?"></textarea>
+      </div>
+      
+      <button type="submit" class="btn">Analyze My Mood</button>
     </form>
 
     <section id="results" class="results" aria-live="polite" hidden>
-      <h2>Your Mood Analysis</h2>
-      <div id="result" class="result-output"></div>
-      <div id="suggestions" class="suggestions"></div>
-      <button id="saveBtn" class="secondary-btn">💾 Save This Entry</button>
+      <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Your Mood Analysis</h2>
+      
+      <div id="result" class="result-output">
+        <h3 style="margin-bottom: 1rem;">Your Predicted Mental State:</h3>
+        <div id="mentalState" style="font-size: 1.5rem; font-weight: 600; color: var(--primary);"></div>
+      </div>
+      
+      <div id="suggestions" class="suggestions" style="margin-top: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Personalized Suggestions</h3>
+        <div id="suggestionsList"></div>
+      </div>
+      
+      <button id="saveBtn" class="btn btn-secondary" style="margin-top: 2rem;">
+        💾 Save This Entry
+      </button>
     </section>
   </main>
 
   <script>
-    // Sync range inputs with output labels
+    // Sync range inputs with their value displays
     document.querySelectorAll('input[type="range"]').forEach(slider => {
-      const output = slider.nextElementSibling;
-      if (output && output.tagName === "OUTPUT") {
-        output.value = slider.value;
-        slider.addEventListener('input', () => {
-          output.value = slider.value;
-        });
-      }
+      const valueDisplay = document.getElementById(`${slider.id}_value`);
+      valueDisplay.textContent = slider.value;
+      
+      slider.addEventListener('input', () => {
+        valueDisplay.textContent = slider.value;
+      });
+    });
+
+    // Form submission handling
+    document.getElementById('moodCheckinForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      // Your form submission logic here
     });
   </script>
-
-  <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
 </body>
 </html>

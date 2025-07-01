@@ -212,7 +212,8 @@
 <div id="moodHistoryContent" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
   {% if moods %}
     {% for mood in moods %}
-    <div class="mood-entry" style="margin: 1rem 0; padding: 1rem; background: #f1f5f9; border-left: 4px solid #6366f1; border-radius: 6px;">
+    <div class="mood-entry" data-id="{{ mood.id }}" style="margin: 1rem 0; padding: 1rem; background: #f1f5f9; border-left: 4px solid #6366f1; border-radius: 6px; position: relative;">
+      <!-- Mood Content -->
       <p><strong>Mood:</strong> {{ mood.mental_state }}</p>
       <p><strong>Time:</strong> 
         {% if mood.timestamp_display %} 
@@ -224,13 +225,18 @@
       {% if mood.journal_entry %}
         <p><em>Journal:</em> {{ mood.journal_entry }}</p>
       {% endif %}
+      
+      <!-- Delete Button -->
+      <button class="delete-mood-btn" 
+              style="position: absolute; top: 0.5rem; right: 0.5rem; background: #fee2e2; color: #b91c1c; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer;">
+        🗑️
+      </button>
     </div>
     {% endfor %}
   {% else %}
     <p style="padding: 1rem;">No mood history yet.</p>
   {% endif %}
 </div>
-
 <!-- Mood Summary Section -->
 <!-- Mood Summary Section -->
 {% if mood_summary %}
@@ -386,16 +392,6 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
   {% endif %}
 </div>
-{% if achievements %}
-  <div class="badge-container">
-    <h3>🏅 Your Achievement Badges</h3>
-    <ul>
-      {% for badge in achievements %}
-        <li>{{ badge }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-{% endif %}
 
 
 
