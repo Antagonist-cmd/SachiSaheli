@@ -7,7 +7,7 @@ from models.mood_model import predict_mood
 
 from flask import Blueprint, request, jsonify, session
 from utils.supabase_client import supabase
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import request
 from models.mood_model import predict_mood
 from flask import Blueprint, jsonify, request, session, redirect, url_for
@@ -36,6 +36,7 @@ def calculate_streak(mood_entries):
 
 
 
+
 @mood_bp.route("/checkin", methods=["POST"])
 def checkin():
     if "user_id" not in session:
@@ -43,14 +44,27 @@ def checkin():
 
     try:
         data = request.get_json()
-        prediction_result = predict_mood(data)
 
+        # Map gender string to int for model input & saving
+        gender_map = {
+            "male": 0,
+            "female": 1,
+            "other": 2,
+            "prefer-not-to-say": 3
+        }
+        gender_val = gender_map.get(data.get("gender", "prefer-not-to-say"), 3)
+
+        # Replace the gender string with mapped int in data for prediction
+        data["gender"] = gender_val
+
+        # Run prediction
+        prediction_result = predict_mood(data)
         predicted_tags = prediction_result["tags"]
 
         checkin_data = {
             "user_id": session["user_id"],
             "age": data["age"],
-            "gender": data["gender"],
+            "gender": gender_val,  # Save numeric gender in DB for consistency
             "stress_level": data["stress_level"],
             "sleep_hours": data["sleep_hours"],
             "sociability": data["sociability"],
@@ -59,17 +73,20 @@ def checkin():
             "self_esteem": data["self_esteem"],
             "motivation": data["motivation"],
             "eating_habits": data["eating_habits"],
-            "diagnosis_tags": predicted_tags,
+            "substance_abuse": data["substance_abuse"],
+            "diagnosis_tags": [str(tag) for tag in predicted_tags],
             "journal_entry": data.get("journal_entry"),
-            "timestamp": datetime.now(datetime.UTC)
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         }
 
         supabase.table("mood_checkins").insert(checkin_data).execute()
 
         return jsonify({"message": "Check-in saved ✅", "predicted_tags": predicted_tags})
+
     except Exception as e:
         print("🔥 Check-in error:", str(e))
         return jsonify({"error": "Failed to save mood check-in"}), 400
+
 
 
 

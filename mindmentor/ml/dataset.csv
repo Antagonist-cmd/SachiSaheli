@@ -1,4 +1,4 @@
-Age,Gender,Stress Level,Sleep Hours,Sociability,Anxiety,Emotional Stability (Mood),Self-Esteem,Motivation,Eating Habits,Substance Abuse (Including Self-Harm),Diagnosis_Tags
+age,gender,stress level,sleep hours,sociability,anxiety,emotional stability (Mood),self-esteem,motivation,eating habits,substance abuse (Including Self-Harm),diagnosis_tags
 20,Female,3,5.2,6,1,10,4,5,10,No,['Stable']
 21,Female,4,3.7,6,4,2,6,9,10,No,['Stable']
 18,Male,1,5.4,3,10,6,8,5,4,No,"['Social Anxiety', 'Panic Tendency']"
