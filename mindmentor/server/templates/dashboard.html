@@ -173,6 +173,16 @@
     {% if quote %}
     <blockquote class="quote-block">"{{ quote }}"</blockquote>
     {% endif %}
+    {% if reflective_insights %}
+    <div class="insight-section" style="margin-top: 2rem; background: #fef9c3; padding: 1rem; border-radius: 10px;">
+    <h3 style="margin-bottom: 0.5rem;">🧠 Reflective Insights</h3>
+    <ul>
+    {% for insight in reflective_insights %}
+      <li>{{ insight }}</li>
+    {% endfor %}
+    </ul>
+    </div>
+{% endif %}
 
     {% if streak > 0 %}
     <p class="streak">🔥 You're on a <strong>{{ streak }}-day streak</strong>! Keep it up! 💪</p>
@@ -287,7 +297,31 @@
   <div class="mood-chart-section">
    <h3>📈 Mood Trend</h3>
    <canvas id="moodChart" height="120"></canvas>
+   {% if weekly_mood_trend %}
+<div class="trend-section" style="margin-top: 2rem; background: #e0f2fe; padding: 1rem; border-radius: 10px;">
+  <h3 style="margin-bottom: 0.5rem;">📅 Mood Pattern Over the Week</h3>
+  <ul>
+    {% for day, mood in weekly_mood_trend.items() %}
+      <li><strong>{{ day }}:</strong> {{ mood }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+<div class="mood-trend-chart">
+  <h3>📊 Weekly Mental State Trends</h3>
+  <canvas id="moodTrendChart" height="140"></canvas>
+</div>
+
+<li><a href="/help">🆘 Help</a></li>
+
+<a href="{{ url_for('checkin.show_checkin_form') }}">📝 Check-In</a>
+
    <!-- Chart.js CDN -->
+<script>
+  const weeklyMoodData = {{ weekly_mood_data | tojson }};
+  console.log("📊 Weekly Mood Trend:", weeklyMoodData);
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {

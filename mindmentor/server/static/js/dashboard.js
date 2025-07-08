@@ -211,3 +211,73 @@ document.addEventListener("DOMContentLoaded", function() {
     document.body.classList.add("dark-mode");
   }
 });
+// 🧠 Weekly Mental Health Trends Chart
+if (typeof Chart !== 'undefined' && typeof weeklyMoodData !== 'undefined') {
+  const ctx = document.getElementById("moodTrendChart").getContext("2d");
+
+  // Extract all unique tags across weeks
+  const allTagsSet = new Set();
+  weeklyMoodData.forEach(weekData => {
+    Object.keys(weekData).forEach(key => {
+      if (key !== "week") allTagsSet.add(key);
+    });
+  });
+
+  const allTags = Array.from(allTagsSet);
+  const tagColors = {
+    "Depression": "#ef4444",
+    "Anxiety": "#f97316",
+    "Burnout": "#facc15",
+    "Insomnia": "#3b82f6",
+    "Balanced": "#10b981",
+    "Motivated": "#8b5cf6",
+    "Substance Abuse": "#ec4899",
+    "Suicidal Thoughts": "#1e40af",
+    "Very Happy": "#22c55e",
+    "Gratitude": "#fbbf24"
+    // fallback color added later if missing
+  };
+
+  // Build datasets per tag
+  const datasets = allTags.map(tag => {
+    return {
+      label: tag,
+      backgroundColor: tagColors[tag] || "#94a3b8",
+      data: weeklyMoodData.map(weekData => weekData[tag] || 0),
+      stack: 'mentalStates'
+    };
+  });
+
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: weeklyMoodData.map(weekData => weekData.week),
+      datasets: datasets
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        title: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: context => `${context.dataset.label}: ${context.raw} check-in(s)`
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          title: { display: true, text: "Week" }
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          title: { display: true, text: "Check-in Count" }
+        }
+      }
+    }
+  });
+}

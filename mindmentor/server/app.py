@@ -8,6 +8,9 @@ from utils.supabase_client import supabase  # Use single shared client
 from datetime import datetime, timedelta
 from collections import Counter
 import random
+from routes.help_routes import help_bp
+from routes.checkin_routes import checkin_bp
+
 
 
 # Setup paths
@@ -30,6 +33,8 @@ from routes.suggestion_routes import suggestion_bp
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(mood_bp, url_prefix="/api/mood")
 app.register_blueprint(suggestion_bp, url_prefix="/api/suggestions")
+app.register_blueprint(help_bp)
+app.register_blueprint(checkin_bp)
 
 # Page routes
 @app.route("/")
@@ -77,23 +82,31 @@ def calculate_streak(mood_entries):
     return streak
 
 
+from collections import defaultdict
+from datetime import datetime
+import random
+from flask import render_template, session, redirect, url_for
+from collections import Counter
+from dateutil import parser
+
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
+
     QUOTES = [
-    "Your mental health is a priority. Your happiness is essential. Your self-care is a necessity.",
-    "Take a deep breath. You’re doing better than you think.",
-    "Every emotion is valid. You’re allowed to feel what you feel.",
-    "Small steps every day. That’s the secret to long-term progress.",
-    "Rest is productive too. 💙",
-    "You are more than your bad days.",
-    "Keep going. Your future self is cheering for you.",
-    "It’s okay to not be okay. Just don’t stay there."
+        "Your mental health is a priority. Your happiness is essential. Your self-care is a necessity.",
+        "Take a deep breath. You’re doing better than you think.",
+        "Every emotion is valid. You’re allowed to feel what you feel.",
+        "Small steps every day. That’s the secret to long-term progress.",
+        "Rest is productive too. 💙",
+        "You are more than your bad days.",
+        "Keep going. Your future self is cheering for you.",
+        "It’s okay to not be okay. Just don’t stay there."
     ]
 
-    
     daily_quote = random.choice(QUOTES)
+
     try:
         result = supabase.table("mood_checkins") \
                          .select("*") \
@@ -102,54 +115,79 @@ def dashboard():
                          .execute()
 
         moods = result.data or []
-        
-    
-        # Convert timestamp string to datetime object if needed
+
+        def derive_simple_mood(tags):
+            if not tags:
+                return "Neutral"
+            tags = [t.lower().strip() for t in tags]
+            if any(t in tags for t in ["depression", "suicidal thoughts"]):
+                return "Very Sad"
+            if any(t in tags for t in ["anxiety", "burnout", "insomnia"]):
+                return "Sad"
+            if any(t in tags for t in ["motivated", "balanced"]):
+                return "Happy"
+            if any(t in tags for t in ["very happy", "gratitude"]):
+                return "Very Happy"
+            return "Neutral"
+
+        weekly_tags = Counter()
+        weekday_mood_map = {}
+        insights = []
+        weekly_tag_distribution = defaultdict(lambda: Counter())
+
         for mood in moods:
+            # Fix timestamp
+            ts = mood.get("timestamp")
+            if isinstance(ts, str):
+                ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                mood["timestamp"] = ts
 
-    # Convert timestamp
-            if isinstance(mood["timestamp"], str):
-                mood["timestamp"] = datetime.fromisoformat(mood["timestamp"].replace("Z", "+00:00"))
-        
-    # ✅ Force suggestions to be a list
-            if isinstance(mood.get("suggestions"), str):
-                mood["suggestions"] = mood["suggestions"].strip("{}").split(",")
-            elif mood.get("suggestions") is None:
-                mood["suggestions"] = []
-
-            ts=mood.get("timestamps")
             if not ts:
                 continue
-            try:
-                if isinstance(ts, str):
-                    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                else:
-                    dt = ts  # Already a datetime object
 
-                mood["timestamp_obj"] = dt
-                mood["timestamp_display"] = dt.strftime("%b %d, %Y at %I:%M %p")
-                mood["timestamp_day"] = dt.strftime("%a")
+            dt = ts
+            week_key = dt.strftime("%G-W%V")  # e.g., 2025-W27
+            weekday = dt.strftime("%a")
 
-            except Exception as e:
-                print("⚠️ Timestamp parsing error:", ts, str(e))
-                mood["timestamp_display"] = "Unknown"
-                mood["timestamp_day"] = "N/A"
-                mood["timestamp_obj"] = None
+            mood["timestamp_obj"] = dt
+            mood["timestamp_display"] = dt.strftime("%b %d, %Y at %I:%M %p")
+            mood["timestamp_day"] = weekday
 
-            # Parse suggestions into list if needed
+            # Clean suggestions
             if isinstance(mood.get("suggestions"), str):
                 mood["suggestions"] = mood["suggestions"].strip("{}").split(",")
             elif mood.get("suggestions") is None:
                 mood["suggestions"] = []
-        
-        
-        last_mood = moods[0] if moods else None
-        
-        mood_counts = Counter(m["mental_state"] for m in moods if m.get("mental_state"))
 
-# Convert to a list of (mood, count) tuples
+            tags = mood.get("diagnosis_tags", [])
+            for tag in tags:
+                clean_tag = tag.strip()
+                weekly_tags[clean_tag.lower()] += 1
+                weekly_tag_distribution[week_key][clean_tag] += 1
+
+            mood["simple_mood"] = derive_simple_mood(tags)
+            weekday_mood_map[weekday] = mood["simple_mood"]
+
+        # Reflective insights
+        if weekly_tags.get("anxiety", 0) >= 3:
+            insights.append("You've been anxious 3+ times this week. Try cutting down caffeine or taking screen breaks.")
+        if weekly_tags.get("low motivation", 0) >= 2:
+            insights.append("Low motivation seems common – maybe a quick nature walk or journaling could help.")
+        if weekly_tags.get("burnout", 0) >= 2:
+            insights.append("Burnout alerts! Take a breather. Schedule light activities to recharge.")
+
+        # Prep data for stacked bar chart
+        weekly_mood_data = []
+        for week, tag_counts in sorted(weekly_tag_distribution.items()):
+            entry = {"week": week}
+            entry.update(tag_counts)
+            weekly_mood_data.append(entry)
+
+        last_mood = moods[0] if moods else None
+        mood_counts = Counter(tag for m in moods for tag in m.get("diagnosis_tags", []))
         mood_summary = [{"mood": mood, "count": count} for mood, count in mood_counts.items()]
-        
+
+        # Greeting
         hour = datetime.now().hour
         if hour < 12:
             greeting = "Good morning ☀️"
@@ -158,30 +196,33 @@ def dashboard():
         else:
             greeting = "Good evening 🌙"
 
-
         return render_template(
             "dashboard.html",
             username=session.get("username", "User"),
             greeting=greeting,
             last_mood=last_mood,
             moods=moods,
-            streak = calculate_streak(moods),
+            streak=calculate_streak(moods),
             mood_summary=mood_summary,
-            quote=daily_quote
+            quote=daily_quote,
+            insights=insights,
+            weekly_mood_trend=weekday_mood_map,
+            weekly_mood_data=weekly_mood_data
         )
-    
-        return render_template(
-            "dashboard.html",
-            username=session.get("username", "User"),
-            last_mood=last_mood,
-            moods=moods,
-            streak=streak
-        )
-    
 
     except Exception as e:
         print("Dashboard error:", str(e))
-        return render_template("dashboard.html", username=session.get("username", "User"), moods=[], last_mood=None, streak=0)
+        return render_template("dashboard.html",
+                               username=session.get("username", "User"),
+                               moods=[],
+                               last_mood=None,
+                               streak=0,
+                               insights=[],
+                               weekly_mood_trend={},
+                               weekly_mood_data=[])
+
+
+
 
 
 @app.route('/delete_mood/<mood_id>', methods=['DELETE'])
