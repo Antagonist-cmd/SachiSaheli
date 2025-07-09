@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="container">
+    <h2>🙏 Gratitude Check-In</h2>
+    <p>Write down one thing you're grateful for today:</p>
+
+    <form method="POST">
+      <textarea name="gratitude_entry" rows="5" placeholder="I'm grateful for..." required></textarea>
+      <button type="submit" class="btn">Submit</button>
+    </form>
+
+    <a href="{{ url_for('checkin.show_checkin_form') }}" class="btn-secondary" style="margin-top: 1rem;">⬅ Back to Check-In Hub</a>
+  </main>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+  <h2>🧠 Cognitive Clarity Check</h2>
+
+  <form method="POST">
+    <div class="form-group">
+      <label for="focus_level">Focus Level (1-10)</label>
+      <input type="range" name="focus_level" id="focus_level" min="1" max="10" value="5" 
+             oninput="document.getElementById('focus_val').textContent = this.value" />
+      <span id="focus_val">5</span>
+    </div>
+
+    <div class="form-group">
+      <label for="mental_fog">Mental Fog (1-10)</label>
+      <input type="range" name="mental_fog" id="mental_fog" min="1" max="10" value="5" 
+             oninput="document.getElementById('fog_val').textContent = this.value" />
+      <span id="fog_val">5</span>
+    </div>
+
+    <button type="submit" class="btn">Submit</button>
+  </form>
+
+  <a href="{{ url_for('checkin.show_checkin_form') }}" class="btn-secondary" style="margin-top: 1rem;">⬅ Back to Check-In Hub</a>
+</main>
+{% endblock %}

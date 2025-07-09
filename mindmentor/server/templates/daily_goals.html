@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+  <h2>🎯 Mini Daily Goals</h2>
+  <p class="subtitle">Set 1–3 small goals you'd like to accomplish today.</p>
+
+  <form method="POST" class="form-grid">
+    <div class="form-group">
+      <label for="goal1">Goal 1</label>
+      <input type="text" name="goal1" id="goal1" placeholder="e.g. Drink 2L of water" />
+    </div>
+    <div class="form-group">
+      <label for="goal2">Goal 2</label>
+      <input type="text" name="goal2" id="goal2" placeholder="e.g. 20 minutes of movement" />
+    </div>
+    <div class="form-group">
+      <label for="goal3">Goal 3</label>
+      <input type="text" name="goal3" id="goal3" placeholder="e.g. Avoid doomscrolling" />
+    </div>
+
+    <button type="submit" class="btn">Save My Goals</button>
+  </form>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <a href="{{ url_for('checkin.show_checkin_form') }}" class="btn-secondary" style="margin-top: 1rem;">⬅ Back to Check-In Hub</a>
+</main>
+{% endblock %}
+
+{% if today_goals %}
+<hr />
+<h3>✅ Today’s Goals</h3>
+<ul>
+  {% for goal, done in today_goals %}
+    <li>
+      <input type="checkbox" {% if done %}checked{% endif %} disabled />
+      {{ goal }}
+    </li>
+  {% endfor %}
+</ul>
+{% endif %}

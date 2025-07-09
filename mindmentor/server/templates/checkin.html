@@ -31,4 +31,69 @@
   <p>Analyze your current mental state and get personalized suggestions.</p>
 </a>
 </div>
+<a href="{{ url_for('checkin.gratitude_checkin') }}" class="checkin-card">
+  <h3>🌼 Gratitude Prompt</h3>
+  <p>Reflect on something you're thankful for today.</p>
+</a>
+
+<a href="{{ url_for('checkin.energy_checkin') }}" class="checkin-card">
+  <h3>🔋 Energy & Motivation</h3>
+  <p>Track how energized and motivated you feel today.</p>
+</a>
+
+<a href="{{ url_for('checkin.clarity_checkin') }}" class="checkin-card">
+  <h3>🧠 Cognitive Clarity</h3>
+  <p>Log how focused or foggy your mind feels today.</p>
+</a>
+
+<a href="{{ url_for('checkin.relaxation_checkin') }}" class="checkin-card">
+  <h3>🧘 Relaxation vs Tension</h3>
+  <p>Track how relaxed or tense you feel right now.</p>
+</a>
+
+<a href="{{ url_for('checkin.daily_goals') }}" class="checkin-card">
+  <h3>🎯 Mini Daily Goals</h3>
+  <p>Write down 1–3 goals to help guide your day.</p>
+</a>
+<div class="daily-goals">
+  <h3>🎯 Your Daily Goals</h3>
+  <ul id="goalList">
+    {% if goals %}
+      {% for i in range(goals|length) %}
+        <li>
+          <label>
+            <input type="checkbox" class="goal-checkbox" data-index="{{ i }}"
+              {% if completed and completed[i] %}checked{% endif %}>
+            {{ goals[i] }}
+          </label>
+        </li>
+      {% endfor %}
+    {% else %}
+      <li>No goals saved for today. Add some goals!</li>
+    {% endif %}
+  </ul>
+</div>
+
 {% endblock %}
+<script>
+  document.querySelectorAll('.goal-checkbox').forEach(checkbox => {
+  checkbox.addEventListener('change', async (e) => {
+    const index = parseInt(e.target.dataset.index);
+
+    try {
+      const res = await fetch('/check-in/update-goal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index, checked: e.target.checked })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Unknown error");
+      console.log("✅ Goal updated!");
+    } catch (err) {
+      alert("⚠️ Failed to update goal: " + err.message);
+    }
+  });
+});
+
+</script>

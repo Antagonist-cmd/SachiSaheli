@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <main class="container">
+    <h2>⚡ Energy & Motivation Check-In</h2>
+
+    <form method="POST">
+      <div class="form-group">
+        <label for="energy_level">Energy Level (1-10)</label>
+        <input type="range" name="energy_level" id="energy_level" min="1" max="10" value="5" oninput="document.getElementById('energy_val').textContent = this.value" />
+        <span id="energy_val">5</span>
+      </div>
+
+      <div class="form-group">
+        <label for="motivation_level">Motivation Level (1-10)</label>
+        <input type="range" name="motivation_level" id="motivation_level" min="1" max="10" value="5" oninput="document.getElementById('motivation_val').textContent = this.value" />
+        <span id="motivation_val">5</span>
+      </div>
+
+      <button type="submit" class="btn">Submit</button>
+    </form>
+
+    <a href="{{ url_for('checkin.show_checkin_form') }}" class="btn-secondary" style="margin-top: 1rem;">⬅ Back to Check-In Hub</a>
+  </main>
+{% endblock %}

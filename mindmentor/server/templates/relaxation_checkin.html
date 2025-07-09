@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+  <h2>🧘 Relaxation vs Tension</h2>
+
+  <form method="POST">
+    <div class="form-group">
+      <label for="relaxation_level">Relaxation Level (1–10)</label>
+      <input type="range" name="relaxation_level" id="relaxation_level" min="1" max="10" value="5"
+             oninput="document.getElementById('relax_val').textContent = this.value" />
+      <span id="relax_val">5</span>
+    </div>
+
+    <div class="form-group">
+      <label for="tension_level">Tension Level (1–10)</label>
+      <input type="range" name="tension_level" id="tension_level" min="1" max="10" value="5"
+             oninput="document.getElementById('tension_val').textContent = this.value" />
+      <span id="tension_val">5</span>
+    </div>
+
+    <button type="submit" class="btn">Submit</button>
+  </form>
+
+  <a href="{{ url_for('checkin.show_checkin_form') }}" class="btn-secondary" style="margin-top: 1rem;">⬅ Back to Check-In Hub</a>
+</main>
+{% endblock %}

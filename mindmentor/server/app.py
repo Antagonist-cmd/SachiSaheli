@@ -1,7 +1,7 @@
 # server/app.py
 import os
 import sys
-from flask import Flask, render_template, redirect, session, url_for
+from flask import Flask, render_template, redirect, session, url_for, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from utils.supabase_client import supabase  # Use single shared client
