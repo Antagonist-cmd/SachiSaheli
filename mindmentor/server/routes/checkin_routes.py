@@ -20,3 +20,9 @@ def handle_checkin_submission():
 
     # For now, just redirect to check-in form
     return redirect(url_for("checkin.show_checkin_form"))
+
+@checkin_bp.route("/mood", methods=["GET"])
+def mood_form():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+    return render_template("mood_tracker.html")  # 🧠 reuse existing template!
