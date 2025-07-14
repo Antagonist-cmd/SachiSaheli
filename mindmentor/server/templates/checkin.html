@@ -4,6 +4,42 @@
 <div class="checkin-hub">
   <h2>🧠 Daily Check-In</h2>
   <p>Choose how you’d like to check in with yourself today.</p>
+{% if goals_data %}
+  <section>
+    <h2>🎯 Your Daily Goals</h2>
+    <form action="{{ url_for('checkin.update_goal_status') }}" method="POST">
+      <ul style="list-style: none; padding-left: 0;">
+        {% for goal in goals_data.goals %}
+          <li>
+            <label>
+              <input type="checkbox" name="completed_goals" value="{{ goal }}"
+              {% if goal in goals_data.completed %}checked{% endif %}>
+              {{ goal }}
+            </label>
+          </li>
+        {% endfor %}
+      </ul>
+      <ul id="goalsList">
+  {% for goal in goals %}
+    {% set done = completed[loop.index0] %}
+    <li>
+      <label style="display: flex; align-items: center;">
+        <input type="checkbox"
+               class="goal-checkbox"
+               data-index="{{ loop.index0 }}"
+               {% if done %} checked {% endif %} />
+        <span class="goal-text {% if done %}done{% endif %}">{{ goal }}</span>
+      </label>
+    </li>
+  {% endfor %}
+</ul>
+      <button type="submit" class="btn btn-secondary">✅ Update Completion</button>
+    </form>
+{% else %}
+  <p style="color: gray;">No goals saved for today.</p>
+{% endif %}
+
+
 
   <div class="checkin-options">
     <a href="{{ url_for('checkin.mood_form') }}" class="checkin-card">
@@ -55,45 +91,84 @@
   <h3>🎯 Mini Daily Goals</h3>
   <p>Write down 1–3 goals to help guide your day.</p>
 </a>
-<div class="daily-goals">
-  <h3>🎯 Your Daily Goals</h3>
-  <ul id="goalList">
-    {% if goals %}
-      {% for i in range(goals|length) %}
-        <li>
-          <label>
-            <input type="checkbox" class="goal-checkbox" data-index="{{ i }}"
-              {% if completed and completed[i] %}checked{% endif %}>
-            {{ goals[i] }}
-          </label>
-        </li>
-      {% endfor %}
-    {% else %}
-      <li>No goals saved for today. Add some goals!</li>
-    {% endif %}
-  </ul>
+
+<a href="{{ url_for('checkin.calendar_view') }}">📅 View Mood Calendar
+
+</a>
+
+<a href="{{ url_for('checkin.gratitude_journal') }}">🙏 Gratitude Journal</a>
+
+<div class="feature-card">
+  <h3>🌼 Gratitude Archive</h3>
+  <p>Reflect back on what you were thankful for, day by day.</p>
+  <a href="{{ url_for('checkin.gratitude_archive') }}" class="btn btn-secondary">View Entries</a>
 </div>
+
+
 
 {% endblock %}
 <script>
-  document.querySelectorAll('.goal-checkbox').forEach(checkbox => {
-  checkbox.addEventListener('change', async (e) => {
-    const index = parseInt(e.target.dataset.index);
+  async function loadGoals() {
+    try {
+      const res = await fetch("/api/goals/get");
+      const data = await res.json();
+
+      const goalsList = document.getElementById("goalsList");
+      goalsList.innerHTML = "";
+
+      const goals = data.goals || [];
+      const completed = data.completed || [];
+
+      goals.forEach((goal, index) => {
+        const li = document.createElement("li");
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.name = "completed";
+        checkbox.value = goal;
+        checkbox.checked = completed.includes(goal);
+
+        const label = document.createElement("label");
+        label.textContent = goal;
+        label.style.marginLeft = "0.5rem";
+
+        li.appendChild(checkbox);
+        li.appendChild(label);
+        goalsList.appendChild(li);
+      });
+    } catch (err) {
+      console.error("Failed to load goals:", err);
+    }
+  }
+
+  document.getElementById("dailyGoalsForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const checkboxes = document.querySelectorAll('#goalsList input[type="checkbox"]');
+    const completed = [];
+
+    checkboxes.forEach(cb => {
+      if (cb.checked) {
+        completed.push(cb.value);
+      }
+    });
 
     try {
-      const res = await fetch('/check-in/update-goal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ index, checked: e.target.checked })
+      const res = await fetch("/api/goals/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed })
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Unknown error");
-      console.log("✅ Goal updated!");
+      if (res.ok) {
+        alert("✅ Goals updated!");
+      } else {
+        alert("❌ Error saving goals.");
+      }
     } catch (err) {
-      alert("⚠️ Failed to update goal: " + err.message);
+      console.error("Saving error:", err);
     }
   });
-});
 
+  loadGoals();
 </script>
+

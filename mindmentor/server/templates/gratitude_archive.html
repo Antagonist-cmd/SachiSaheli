@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>🪷 Your Gratitude Highlights</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <h1>🌼 Gratitude Highlights</h1>
+    <p style="margin-bottom: 2rem;">A few reminders of what brought joy recently ✨</p>
+
+    {% if entries %}
+      <ul class="gratitude-archive-list">
+        {% for entry in entries %}
+          <li>
+            <strong>{{ entry.timestamp }}:</strong> {{ entry.text }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No gratitude entries yet. Start journaling to see your highlights here 💛</p>
+    {% endif %}
+  </main>
+</body>
+</html>

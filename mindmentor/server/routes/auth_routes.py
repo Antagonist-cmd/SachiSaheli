@@ -19,7 +19,6 @@ def register():
         return render_template("register.html", error="❌ Invalid or mismatched inputs.")
 
     email = f"{username}@no-email.invalid"
-    from utils.supabase_client import supabase
 
     try:
         response = supabase.auth.sign_up({

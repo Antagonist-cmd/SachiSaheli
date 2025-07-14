@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="container">
+  <h1>🗓️ Mood Calendar</h1>
+  <p class="subtitle">See your check-in history at a glance</p>
+
+  <div class="calendar-grid">
+    {% for day in mood_by_date %}
+      <div class="calendar-cell mood-box {{ mood_by_date[day]|lower|replace(' ', '-') }}">
+        <span class="date">{{ day }}</span>
+        <span class="mood">{{ mood_by_date[day] }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <style>
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .calendar-cell {
+      background: #f3f4f6;
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 4px rgba(0,0,0,0.1);
+    }
+    .calendar-cell .date {
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    .calendar-cell .mood {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .mood-box.very-sad { background: #fecaca; }   /* Red-ish */
+    .mood-box.sad { background: #fde68a; }        /* Yellow */
+    .mood-box.neutral { background: #e5e7eb; }    /* Gray */
+    .mood-box.happy { background: #bbf7d0; }      /* Green */
+    .mood-box.very-happy { background: #a5f3fc; } /* Blue */
+  </style>
+</main>
+{% endblock %}

@@ -117,11 +117,16 @@
       <h3>Your Predicted Mental State:</h3>
       <div id="mentalState" class="tag-list"></div>
       </div>
-
+      <div class="form-group">
+      <label for="gratitude">One thing you're grateful for today</label>
+      <textarea id="gratitude" name="gratitude" rows="2" placeholder="e.g., A chat with a friend, good food, sunny weather..."></textarea>
+      </div>
        <div class="suggestions" style="margin-top: 2rem;">
        <h3>Personalized Suggestions</h3>
        <div id="suggestionsList"></div>
-      </div>
+       </div>
+
+
 
       <button id="saveBtn" class="btn btn-secondary" style="margin-top: 2rem;">
         💾 Save This Entry
@@ -173,7 +178,8 @@
       motivation: form.motivation.value,
       eating_habits: form.eating_habits?.value || 5,
       substance_abuse: form.substance_abuse?.value || 5,
-      journal_entry: form.journal_entry.value
+      journal_entry: form.journal_entry.value,
+      gratitude: form.gratitude.value
     };
 
     try {

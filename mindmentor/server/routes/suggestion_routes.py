@@ -9,6 +9,6 @@ def get_suggestions():
     sample_suggestions = [
         "Go for a walk 🚶",
         "Listen to music 🎧",
-        "Call a friend 📞"
+        "Call a friend 📞"  
     ]
     return jsonify({"suggestions": sample_suggestions})

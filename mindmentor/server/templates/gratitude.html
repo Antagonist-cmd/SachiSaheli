@@ -1,15 +1,29 @@
-{% extends "base.html" %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Gratitude Journal - MindMentor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
   <main class="container">
-    <h2>🙏 Gratitude Check-In</h2>
-    <p>Write down one thing you're grateful for today:</p>
+    <h1>🙏 Gratitude Journal</h1>
 
-    <form method="POST">
-      <textarea name="gratitude_entry" rows="5" placeholder="I'm grateful for..." required></textarea>
-      <button type="submit" class="btn">Submit</button>
-    </form>
+    <form method="POST" action="{{ url_for('checkin.save_gratitude') }}" class="gratitude-form">
+  <textarea name="gratitude" rows="4" placeholder="What are you grateful for today?" required></textarea>
+  <button type="submit" class="btn">💾 Save Entry</button>
+</form>
 
-    <a href="{{ url_for('checkin.show_checkin_form') }}" class="btn-secondary" style="margin-top: 1rem;">⬅ Back to Check-In Hub</a>
+
+    {% if entries %}
+    <section class="archive">
+      <h2>🗂️ Your Past Gratitude Entries</h2>
+      <ul>
+        {% for entry in entries %}
+          <li><strong>{{ entry.timestamp }}</strong> — {{ entry.text }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
   </main>
-{% endblock %}
+</body>
+</html>
