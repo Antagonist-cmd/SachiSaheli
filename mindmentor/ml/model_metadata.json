@@ -1,0 +1,74 @@
+{
+  "features": [
+    "substance_abuse",
+    "age",
+    "stress_level",
+    "sleep_hours",
+    "sociability",
+    "anxiety",
+    "emotional_stability",
+    "self_esteem",
+    "motivation",
+    "eating_habits"
+  ],
+  "tag_names": [
+    "Addiction",
+    "Anxiety Disorder",
+    "Apathy",
+    "Burnout",
+    "Depression",
+    "Disordered Eating",
+    "Generalized Anxiety",
+    "Healthy",
+    "Hopelessness",
+    "Hypersomnia",
+    "Insomnia",
+    "Isolation Risk",
+    "Low Self-Esteem",
+    "Low Self-Worth",
+    "Mood Swings",
+    "Substance Dependence"
+  ],
+  "thresholds": {
+    "Addiction": 0.65,
+    "Anxiety Disorder": 0.35,
+    "Apathy": 0.4,
+    "Burnout": 0.4,
+    "Depression": 0.35,
+    "Disordered Eating": 0.45,
+    "Generalized Anxiety": 0.35,
+    "Healthy": 0.25,
+    "Hopelessness": 0.4,
+    "Hypersomnia": 0.5,
+    "Insomnia": 0.45,
+    "Isolation Risk": 0.4,
+    "Low Self-Esteem": 0.45,
+    "Low Self-Worth": 0.3,
+    "Mood Swings": 0.5,
+    "Substance Dependence": 0.7
+  },
+  "model_performance": {
+    "cv_f1_mean": 0.5340420190067536,
+    "cv_f1_std": 0.0004945147259247223,
+    "hamming_loss": 0.0363625,
+    "subset_accuracy": 0.584225
+  },
+  "preprocessing": {
+    "scaler": "RobustScaler",
+    "removed_features": [
+      "gender"
+    ],
+    "essential_features": [
+      "substance_abuse"
+    ],
+    "variance_threshold": 0.01,
+    "substance_abuse_included": true
+  },
+  "model_info": {
+    "algorithm": "RandomForestClassifier",
+    "n_estimators": 300,
+    "max_depth": 20,
+    "class_weight": "balanced",
+    "training_date": "2025-07-19T10:46:27.519124"
+  }
+}
