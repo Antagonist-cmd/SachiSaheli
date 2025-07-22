@@ -294,103 +294,214 @@
     {% endif %}
     
   </div>
-  <div class="mood-chart-section">
-   <h3>📈 Mood Trend</h3>
-   <canvas id="moodChart" height="120"></canvas>
-   {% if weekly_mood_trend %}
-<div class="trend-section" style="margin-top: 2rem; background: #e0f2fe; padding: 1rem; border-radius: 10px;">
-  <h3 style="margin-bottom: 0.5rem;">📅 Mood Pattern Over the Week</h3>
-  <ul>
-    {% for day, mood in weekly_mood_trend.items() %}
-      <li><strong>{{ day }}:</strong> {{ mood }}</li>
-    {% endfor %}
-  </ul>
-</div>
+
+
+
+{% if weekly_mood_trend %}
+  <div class="trend-section" style="margin-top: 2rem; background: #e0f2fe; padding: 1rem; border-radius: 10px;">
+    <h3 style="margin-bottom: 0.5rem;">📅 Mood Pattern Over the Week</h3>
+    <ul>
+      {% for day, mood in weekly_mood_trend.items() %}
+        <li><strong>{{ day }}:</strong> {{ mood }}</li>
+      {% endfor %}
+    </ul>
+  </div>
 {% endif %}
+
+<style>
+/* 🔥 CRITICAL: Chart size constraints to prevent infinite growth */
+.mood-trend-chart {
+  height: 500px !important;
+  max-height: 500px !important;
+  width: 100%;
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  position: relative;
+}
+
+.mood-trend-chart h3 {
+  margin: 0 0 15px 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.chart-wrapper {
+  height: 420px !important;
+  max-height: 420px !important;
+  width: 100%;
+  position: relative;
+  background: #fafafa;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+#moodTrendChart {
+  max-height: 400px !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  height: 400px !important;
+}
+</style>
+
 <div class="mood-trend-chart">
   <h3>📊 Weekly Mental State Trends</h3>
-  <canvas id="moodTrendChart" height="140"></canvas>
+  <div class="chart-wrapper">
+    <canvas id="moodTrendChart"></canvas>
+  </div>
 </div>
+
+
+<!-- ✅ Mood data must be available BEFORE JS loads -->
+
+
 
 <li><a href="/help">🆘 Help</a></li>
 
 <a href="{{ url_for('checkin.show_checkin_form') }}">📝 Check-In</a>
 
-   <!-- Chart.js CDN -->
-<script>
-  const weeklyMoodData = {{ weekly_mood_data | tojson }};
-  console.log("📊 Weekly Mood Trend:", weeklyMoodData);
-</script>
+<div class="mood-chart-section">
+        <div class="chart-header">
+            <h3>📈 Mood Trend Analysis</h3>
+            <div class="chart-controls">
+                <select id="timeRangeSelector" class="time-selector">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="all">All Time</option>
+                </select>
+                <button id="refreshChart" class="refresh-btn">🔄</button>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="moodChart" height="300"></canvas>
+            <div id="chartLoading" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading mood data...</p>
+            </div>
+            <div id="emptyChart" class="empty-state" style="display: none;">
+                <p>📊 No mood data available for the selected period</p>
+                <small>Start tracking your mood to see trends!</small>
+            </div>
+        </div>
+        
+        <div id="chartInfo" class="chart-info">
+            <span id="dataPointCount">0 data points</span>
+            <span id="dateRange"></span>
+        </div>
+    </div>
 
+    <!-- Data passing scripts -->
+    <script id="moodData" type="application/json">{{ moods | tojson }}</script>
+    <script id="chartConfig" type="application/json">
+    {
+        "defaultTimeRange": 30,
+        "interpolation": true,
+        "clickablePoints": true
+    }
+    </script>
+
+    <!-- Load scripts in correct order -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/mood-chart.js') }}"></script>
+    
+    <!-- Your other existing scripts -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+   <!-- Chart.js CDN -->
+<script id="weeklyMoodData" type="application/json">{{ weekly_mood_data | tojson }}</script>
+<script id="moodData" type="application/json">{{ moods | tojson }}</script>
+
+<!-- Load Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-  // Only proceed if we have data and a chart element
-  const moodDataElement = document.getElementById('moodData');
-  const chartCanvas = document.getElementById('moodChart');
+  // Parse weekly mood data
+  const weeklyMoodDataElement = document.getElementById('weeklyMoodData');
+  const chartCanvas = document.getElementById('moodTrendChart');
   
-  if (moodDataElement && chartCanvas) {
-    const moods = JSON.parse(moodDataElement.textContent);
+  if (weeklyMoodDataElement && chartCanvas) {
+    const weeklyMoodData = JSON.parse(weeklyMoodDataElement.textContent);
+    console.log("📊 Weekly Mood Data:", weeklyMoodData);
     
-    if (moods && moods.length > 0) {
-      // Process data for chart
-      const labels = moods.map(m => m.timestamp_day || '');
-      const dataPoints = moods.map(m => {
-        // Convert mood states to numerical values
-        const moodScale = {
-          'Very Happy': 5, 'Happy': 4, 'Neutral': 3, 
-          'Sad': 2, 'Very Sad': 1, 'Anxious': 2, 
-          'Stressed': 1, 'Excited': 4
-        };
-        return moodScale[m.mental_state] || 3; // Default to neutral
+    if (weeklyMoodData && weeklyMoodData.length > 0) {
+      // Destroy existing chart instance if it exists
+      if (window.weeklyTrendChartInstance) {
+        window.weeklyTrendChartInstance.destroy();
+        window.weeklyTrendChartInstance = null;
+      }
+      
+      // Extract all unique tags across weeks
+      const allTagsSet = new Set();
+      weeklyMoodData.forEach(weekData => {
+        Object.keys(weekData).forEach(key => {
+          if (key !== "week") allTagsSet.add(key);
+        });
       });
-
-      // Create chart
-      new Chart(chartCanvas.getContext('2d'), {
-        type: 'line',
+      const allTags = Array.from(allTagsSet);
+      
+      // Color palette for tags
+      const tagColors = {
+        "Anxiety": "#f97316",
+        "Depression": "#ef4444", 
+        "Burnout": "#facc15",
+        "Healthy": "#10b981",
+        "Stable": "#22c55e",
+        "Stress": "#f59e0b",
+        // Add more colors as needed
+      };
+      
+      // Build datasets
+      const datasets = allTags.map((tag, index) => {
+        return {
+          label: tag,
+          backgroundColor: tagColors[tag] || `hsl(${(index * 137.5) % 360}, 65%, 70%)`,
+          data: weeklyMoodData.map(weekData => weekData[tag] || 0),
+          stack: 'mentalStates'
+        };
+      });
+      
+      // Create the chart
+      window.weeklyTrendChartInstance = new Chart(chartCanvas.getContext('2d'), {
+        type: 'bar',
         data: {
-          labels: labels,
-          datasets: [{
-            label: 'Mood Level',
-            data: dataPoints,
-            borderColor: '#6366f1',
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 5,
-            pointBackgroundColor: '#6366f1'
-          }]
+          labels: weeklyMoodData.map(weekData => weekData.week),
+          datasets: datasets
         },
         options: {
           responsive: true,
-          scales: {
-            y: {
-              min: 1,
-              max: 5,
-              ticks: {
-                callback: function(value) {
-                  // Map numbers back to mood labels
-                  const moodLabels = {
-                    1: 'Very Sad', 2: 'Sad', 3: 'Neutral',
-                    4: 'Happy', 5: 'Very Happy'
-                  };
-                  return moodLabels[value] || value;
-                }
-              }
-            }
-          },
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
           plugins: {
+            title: {
+              display: true,
+              text: '📊 Weekly Mental Health Trends'
+            },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  const mood = moods[context.dataIndex];
-                  return [
-                    `Mood: ${mood.mental_state}`,
-                    `Time: ${mood.timestamp_display || mood.timestamp}`,
-                    mood.journal_entry ? `Note: ${mood.journal_entry.substring(0, 30)}...` : ''
-                  ];
-                }
+                label: context => `${context.dataset.label}: ${context.raw} check-in(s)`
               }
+            },
+            legend: {
+              display: true,
+              position: 'bottom'
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              title: { display: true, text: "Week" }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              title: { display: true, text: "Check-in Count" }
             }
           }
         }
@@ -399,6 +510,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 });
 </script>
+
 <script id="moodData" type="application/json">
   {{ moods|tojson }}
 </script>
@@ -437,7 +549,6 @@ document.addEventListener("DOMContentLoaded", function() {
   });
   
 </script>
-<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
 </body>
 </html>

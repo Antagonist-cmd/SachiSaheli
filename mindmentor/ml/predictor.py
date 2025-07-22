@@ -40,13 +40,16 @@ OPTIMIZED_THRESHOLDS = metadata.get("thresholds", {
 
 def predict_mood(input_data: dict, use_thresholds=True):
     try:
-        # Remove features that were excluded during training
+        # Only remove features that were actually excluded during training
         cleaned_data = input_data.copy()
+        
+        # Only remove gender (confirmed excluded in metadata)
         if "gender" in cleaned_data:
             del cleaned_data["gender"]
-        if "substance_abuse" in cleaned_data:
-            del cleaned_data["substance_abuse"]
-
+        
+        # DO NOT remove substance_abuse - it's essential for the model
+        # Your metadata shows it's the first feature the model expects
+        
         feature_values = []
         for feature in FEATURES:
             if feature in cleaned_data:
@@ -84,7 +87,6 @@ def predict_mood(input_data: dict, use_thresholds=True):
 
         tags = []
         if y_pred[0].any():
-            # Skip MLBinarizer entirely and use direct indexing
             predicted_indices = np.where(y_pred[0] == 1)[0]
             tags = [TAG_NAMES[i] for i in predicted_indices]
             print(f"Final extracted tags: {tags}")  # Debug
@@ -104,7 +106,6 @@ def predict_mood(input_data: dict, use_thresholds=True):
         import traceback
         traceback.print_exc()
         
-        # Return safe default structure
         return {
             "tags": [],
             "confidence": "low",

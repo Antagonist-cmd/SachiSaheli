@@ -2,30 +2,42 @@ document.addEventListener("DOMContentLoaded", function() {
   // Mood History Expand/Collapse
   const historyBanner = document.getElementById("moodHistoryBanner");
   const historyContent = document.getElementById("moodHistoryContent");
-
+  const bannerTitle = historyBanner ? historyBanner.querySelector('h3') : null;
+  
   if (historyBanner && historyContent) {
+    historyContent.style.overflow = "hidden";
+    historyContent.style.transition = "max-height 0.3s cubic-bezier(0.4,0,0.2,1)";
+    historyContent.style.maxHeight = "0px";
+    let isOpen = false;
+    
     historyBanner.addEventListener("click", function() {
-      if (historyContent.style.maxHeight) {
-        historyContent.style.maxHeight = null;
-        historyBanner.querySelector('h3').innerHTML = '📅 Your Mood History (click to expand)';
+      if (isOpen) {
+        historyContent.style.maxHeight = "0px";
+        if (bannerTitle) bannerTitle.innerHTML = '📅 Your Mood History (click to expand)';
+        isOpen = false;
       } else {
         historyContent.style.maxHeight = historyContent.scrollHeight + "px";
-        historyBanner.querySelector('h3').innerHTML = '📅 Your Mood History (click to collapse)';
+        if (bannerTitle) bannerTitle.innerHTML = '📅 Your Mood History (click to collapse)';
+        isOpen = true;
       }
     });
-
-    // Initialize as collapsed
-    historyContent.style.maxHeight = "0";
-    historyContent.style.overflow = "hidden";
-    historyContent.style.transition = "max-height 0.3s ease";
+    
+    window.addEventListener("resize", function() {
+      if (isOpen) {
+        historyContent.style.maxHeight = historyContent.scrollHeight + "px";
+      }
+    });
   }
 
   // Mood Summary Toggle
   const toggleBtn = document.getElementById("toggle-summary");
   const summaryContent = document.getElementById("summary-content");
   const toggleIcon = document.getElementById("toggle-icon");
-
-  if (toggleBtn) {
+  
+  if (toggleBtn && summaryContent && toggleIcon) {
+    summaryContent.style.display = "none";
+    toggleIcon.textContent = "▼";
+    
     toggleBtn.addEventListener("click", () => {
       const isOpen = summaryContent.style.display === "block";
       summaryContent.style.display = isOpen ? "none" : "block";
@@ -33,118 +45,107 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // 🧠 Convert predicted tags into a general mood level
-  function getMoodLevelFromTags(tags) {
-    if (!tags || tags.length === 0) return "Very Happy";
+  // Delete button handlers
+  initializeDeleteButtons();
 
-    const moodScore = {
-      "depression": 1,
-      "suicidal_thoughts": 1,
-      "burnout": 2,
-      "low self-esteem": 2,
-      "anxiety": 2,
-      "emotional_instability": 2,
-      "stress": 3,
-      "neutral": 3,
-      "low_energy": 3
-    };
+  // Theme toggle
+  initializeThemeToggle();
+});
 
-    let minScore = 5;
-    tags.forEach(tag => {
-      const score = moodScore[tag.toLowerCase()];
-      if (score && score < minScore) minScore = score;
-    });
-
-    const moodMap = {
-      1: "Very Sad",
-      2: "Sad",
-      3: "Neutral",
-      4: "Happy",
-      5: "Very Happy"
-    };
-
-    return moodMap[minScore] || "Neutral";
+// 🧠 Convert predicted tags into a general mood level
+function getMoodLevelFromTags(mood_entry) {
+  const validMoods = ["Very Sad", "Sad", "Neutral", "Happy", "Very Happy"];
+  if (mood_entry && validMoods.includes(mood_entry.simple_mood)) {
+    return mood_entry.simple_mood;
   }
-
-  // Mood Chart Visualization
-  let moodChartInstance = null;
-
-  if (typeof Chart !== 'undefined' && document.getElementById("moodChart")) {
-    const moodDataEl = document.getElementById("moodData");
-    if (!moodDataEl) {
-      console.warn("No mood data found for chart.");
-      return;
+  
+  const tags = mood_entry?.diagnosis_tags || [];
+  if (!Array.isArray(tags) || tags.length === 0) return "Neutral";
+  
+  const moodScore = {
+    // Score 1: Very Sad
+    "suicidal thoughts": 1,
+    "depression": 1,
+    "hopelessness": 1,
+    "severe depression": 1,
+    "major depression": 1,
+    // Score 2: Sad
+    "anxiety": 2,
+    "burnout": 2,
+    "insomnia": 2,
+    "stress": 2,
+    "low motivation": 2,
+    "low self-esteem": 2,
+    "emotional instability": 2,
+    "isolation": 2,
+    "social withdrawal": 2,
+    "substance abuse": 2,
+    "disordered eating": 2,
+    "mood swings": 2,
+    "apathy": 2,
+    "addiction": 2,
+    "substance dependence": 2,
+    // Score 3: Neutral
+    "neutral": 3,
+    "okay": 3,
+    "unknown": 3,
+    // Score 4: Happy
+    "healthy": 4,
+    "motivated": 4,
+    "balanced": 4,
+    "stable": 4,
+    "calm": 4,
+    "focused": 4,
+    "good mood": 4,
+    "positive": 4,
+    "content": 4,
+    "relaxed": 4,
+    // Score 5: Very Happy
+    "very happy": 5,
+    "gratitude": 5,
+    "joy": 5,
+    "excited": 5,
+    "elated": 5,
+    "euphoric": 5,
+    "blissful": 5,
+    "thriving": 5,
+    "excellent": 5
+  };
+  
+  let score = 3;
+  let found = false;
+  
+  for (let tag of tags) {
+    const normalized = tag.toLowerCase().trim().replace(/[_\s]+/g, " ");
+    const s = moodScore[normalized];
+    if (s !== undefined) {
+      score = Math.min(score, s);
+      found = true;
     }
-
-    const moods = JSON.parse(moodDataEl.textContent);
-    const labels = moods.map(m => m.timestamp_day || "");
-    const moodValues = moods.map(m => {
-      const mood = getMoodLevelFromTags(m.diagnosis_tags || []);
-      const states = { "Very Happy": 5, "Happy": 4, "Neutral": 3, "Sad": 2, "Very Sad": 1 };
-      return states[mood] || 3;
-    });
-
-    if (moodChartInstance) moodChartInstance.destroy();
-
-    const ctx = document.getElementById("moodChart").getContext("2d");
-
-    moodChartInstance = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Mood Trend",
-          data: moodValues,
-          borderColor: "#6366f1",
-          backgroundColor: "rgba(99, 102, 241, 0.1)",
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: "#6366f1",
-          pointRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            min: 1,
-            max: 5,
-            ticks: {
-              callback: function(value) {
-                const labels = ["", "Very Sad", "Sad", "Neutral", "Happy", "Very Happy"];
-                return labels[value];
-              }
-            }
-          }
-        },
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const mood = moods[context.dataIndex];
-                return [
-                  `Mood: ${getMoodLevelFromTags(mood.diagnosis_tags || [])}`,
-                  `Time: ${mood.timestamp_display || mood.timestamp}`,
-                  mood.journal_entry ? `Journal: ${mood.journal_entry.substring(0, 30)}...` : ''
-                ];
-              }
-            }
-          }
-        }
-      }
-    });
   }
+  
+  if (!found) {
+    console.warn("No valid tags found in", tags);
+    return "Neutral";
+  }
+  
+  const moodMap = {
+    1: "Very Sad", 2: "Sad", 3: "Neutral", 4: "Happy", 5: "Very Happy"
+  };
+  return moodMap[score];
+}
 
-  // Delete button (API version)
+// Delete button handlers
+function initializeDeleteButtons() {
+  // API version delete buttons
   document.querySelectorAll(".delete-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       const entryId = btn.getAttribute("data-id");
       if (!confirm("Are you sure you wanna delete this mood entry?")) return;
-
+      
       try {
         const res = await fetch(`/api/mood/delete/${entryId}`, { method: "POST" });
         const data = await res.json();
-
         if (res.ok) {
           alert(data.message);
           const moodDiv = document.getElementById(`mood-${entryId}`);
@@ -158,15 +159,14 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   });
-
-  // Delete button (legacy fallback)
+  
+  // Legacy fallback delete buttons
   document.querySelectorAll('.delete-mood-btn').forEach(btn => {
     btn.addEventListener('click', async function () {
       const entry = this.closest('.mood-entry');
       if (confirm('Delete this mood entry?')) {
         try {
           const response = await fetch(`/delete_mood/${entry.dataset.id}`, { method: 'DELETE' });
-
           if (response.ok) {
             entry.style.opacity = '0';
             setTimeout(() => entry.remove(), 300);
@@ -177,26 +177,28 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   });
+}
 
-  // Theme toggle
+// Theme toggle initialization
+function initializeThemeToggle() {
   const settingsToggle = document.getElementById("settingsToggle");
   const settingsDropdown = document.getElementById("settingsDropdown");
   const themeToggleBtn = document.getElementById("toggleTheme");
-
+  
   if (settingsToggle && settingsDropdown) {
     settingsToggle.addEventListener("click", (e) => {
       e.stopPropagation();
       const isOpen = settingsDropdown.style.display === "block";
       settingsDropdown.style.display = isOpen ? "none" : "block";
     });
-
+    
     document.addEventListener("click", (e) => {
       if (!settingsDropdown.contains(e.target) && e.target !== settingsToggle) {
         settingsDropdown.style.display = "none";
       }
     }, { passive: true });
   }
-
+  
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -205,79 +207,10 @@ document.addEventListener("DOMContentLoaded", function() {
       localStorage.setItem("theme", theme);
     });
   }
-
+  
+  // Apply saved theme
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") {
     document.body.classList.add("dark-mode");
   }
-});
-// 🧠 Weekly Mental Health Trends Chart
-if (typeof Chart !== 'undefined' && typeof weeklyMoodData !== 'undefined') {
-  const ctx = document.getElementById("moodTrendChart").getContext("2d");
-
-  // Extract all unique tags across weeks
-  const allTagsSet = new Set();
-  weeklyMoodData.forEach(weekData => {
-    Object.keys(weekData).forEach(key => {
-      if (key !== "week") allTagsSet.add(key);
-    });
-  });
-
-  const allTags = Array.from(allTagsSet);
-  const tagColors = {
-    "Depression": "#ef4444",
-    "Anxiety": "#f97316",
-    "Burnout": "#facc15",
-    "Insomnia": "#3b82f6",
-    "Balanced": "#10b981",
-    "Motivated": "#8b5cf6",
-    "Substance Abuse": "#ec4899",
-    "Suicidal Thoughts": "#1e40af",
-    "Very Happy": "#22c55e",
-    "Gratitude": "#fbbf24"
-    // fallback color added later if missing
-  };
-
-  // Build datasets per tag
-  const datasets = allTags.map(tag => {
-    return {
-      label: tag,
-      backgroundColor: tagColors[tag] || "#94a3b8",
-      data: weeklyMoodData.map(weekData => weekData[tag] || 0),
-      stack: 'mentalStates'
-    };
-  });
-
-  const chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: weeklyMoodData.map(weekData => weekData.week),
-      datasets: datasets
-    },
-    options: {
-      responsive: true,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        title: {
-          display: false
-        },
-        tooltip: {
-          callbacks: {
-            label: context => `${context.dataset.label}: ${context.raw} check-in(s)`
-          }
-        }
-      },
-      scales: {
-        x: {
-          stacked: true,
-          title: { display: true, text: "Week" }
-        },
-        y: {
-          stacked: true,
-          beginAtZero: true,
-          title: { display: true, text: "Check-in Count" }
-        }
-      }
-    }
-  });
 }

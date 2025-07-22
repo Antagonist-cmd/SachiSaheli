@@ -139,3 +139,167 @@
   text-decoration: line-through;
   color: gray;
 }
+/* Mood Chart Section Styling */
+.mood-chart-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-header h3 {
+    margin: 0;
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.time-selector {
+    padding: 8px 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: white;
+    color: #374151;
+    font-size: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.time-selector:hover {
+    border-color: #6366f1;
+}
+
+.time-selector:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.refresh-btn {
+    padding: 8px 12px;
+    background: #f3f4f6;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
+}
+
+.refresh-btn:hover {
+    background: #6366f1;
+    border-color: #6366f1;
+    transform: rotate(180deg);
+}
+
+.chart-container {
+    position: relative;
+    height: 320px;
+    margin-bottom: 15px;
+}
+
+#moodChart {
+    max-height: 300px !important;
+}
+
+.loading-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #6b7280;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #9ca3af;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.empty-state small {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.chart-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Modal Styling */
+.mood-detail-modal {
+    backdrop-filter: blur(4px);
+}
+
+.mood-detail-modal button:hover {
+    background: #4f46e5 !important;
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .chart-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .chart-controls {
+        justify-content: center;
+    }
+    
+    .chart-container {
+        height: 280px;
+    }
+    
+    .chart-info {
+        flex-direction: column;
+        gap: 5px;
+        text-align: center;
+    }
+}

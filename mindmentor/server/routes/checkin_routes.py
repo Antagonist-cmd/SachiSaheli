@@ -60,64 +60,7 @@ def mood_form():
         return redirect(url_for("auth.login"))
     return render_template("mood_tracker.html")  # 🧠 reuse existing template!
 
-@checkin_bp.route("/gratitude", methods=["GET", "POST"])
-def gratitude_checkin():
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
 
-    if request.method == "POST":
-        gratitude_text = request.form.get("gratitude_entry", "").strip()
-        print("🙏 Gratitude Submitted:", gratitude_text)
-
-        # TODO: Save it to Supabase later
-        return redirect(url_for("checkin.gratitude_checkin"))
-
-    return render_template("gratitude.html")
-
-@checkin_bp.route("/energy", methods=["GET", "POST"])
-def energy_checkin():
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
-
-    if request.method == "POST":
-        energy = request.form.get("energy_level")
-        motivation = request.form.get("motivation_level")
-        print("⚡ Energy:", energy, "| 🚀 Motivation:", motivation)
-
-        # TODO: Save to Supabase later
-        return redirect(url_for("checkin.energy_checkin"))
-
-    return render_template("energy_checkin.html")
-
-@checkin_bp.route("/clarity", methods=["GET", "POST"])
-def clarity_checkin():
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
-
-    if request.method == "POST":
-        focus_level = request.form.get("focus_level")
-        mental_fog = request.form.get("mental_fog")
-        print("🧠 Focus Level:", focus_level, "| 🌫️ Mental Fog:", mental_fog)
-
-        # TODO: Save to Supabase later
-        return redirect(url_for("checkin.clarity_checkin"))
-
-    return render_template("clarity_checkin.html")
-
-@checkin_bp.route("/relaxation", methods=["GET", "POST"])
-def relaxation_checkin():
-    if "user_id" not in session:
-        return redirect(url_for("auth.login"))
-
-    if request.method == "POST":
-        relaxation_level = request.form.get("relaxation_level")
-        tension_level = request.form.get("tension_level")
-        print("🧘 Relaxation:", relaxation_level, "| 💥 Tension:", tension_level)
-
-        # TODO: Save to Supabase later
-        return redirect(url_for("checkin.relaxation_checkin"))
-
-    return render_template("relaxation_checkin.html")
 
 @checkin_bp.route("/daily-goals", methods=["GET", "POST"])
 def daily_goals():
