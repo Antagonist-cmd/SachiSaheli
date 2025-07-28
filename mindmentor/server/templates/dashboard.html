@@ -4,551 +4,461 @@
   <meta charset="UTF-8">
   <title>Dashboard | MindMentor</title>
   <link rel="stylesheet" href="/static/css/styles.css">
-  <style>
-    body {
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f8fafc;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      font-size: 2rem;
-      color: #1e293b;
-    }
-
-    .greeting {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
-      color: #475569;
-    }
-
-    .last-mood {
-      background: #eef2ff;
-      padding: 1rem;
-      border-radius: 10px;
-      margin-bottom: 2rem;
-    }
-
-    .mood-history {
-      margin-top: 2rem;
-    }
-
-    .mood-entry {
-      background: #f1f5f9;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      border-left: 5px solid #6366f1;
-      border-radius: 6px;
-    }
-
-    .actions {
-      margin-top: 2rem;
-      display: flex;
-      gap: 1rem;
-    }
-
-    .actions a {
-      padding: 0.75rem 1.5rem;
-      background: #6366f1;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      transition: all 0.2s ease-in-out;
-    }
-
-    .actions a:hover {
-      background: #4f46e5;
-    }
-
-    .streak {
-      background: #ffe4b5;
-      padding: 10px 15px;
-      border-radius: 10px;
-      color: #b45309;
-      font-weight: 600;
-      margin-bottom: 1rem;
-      user-select: none;
-      text-align: center;
-    }
-
-    .quote-block {
-      font-style: italic;
-      color: #334155;
-      background: #f0fdf4;
-      padding: 1rem;
-      border-left: 5px solid #10b981;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-    }
-
-    .journal-floating {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 250px;
-      background: #fff7ed;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .journal-floating textarea {
-      width: 100%;
-      height: 80px;
-      padding: 0.5rem;
-      font-size: 14px;
-      resize: none;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-    }
-
-    .journal-floating button {
-      background: #10b981;
-      color: white;
-      border: none;
-      padding: 0.5rem;
-      font-size: 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.2s ease-in-out;
-    }
-
-    .journal-floating button:hover {
-      background: #059669;
-    }
-
-    .mood-summary {
-      margin-top: 2rem;
-      padding: 1rem;
-      background: #e0f2fe;
-      border-radius: 10px;
-    }
-
-    #moodHistoryDrawer {
-      position: fixed;
-      top: 0;
-      right: -100%;
-      width: 350px;
-      height: 100%;
-      background: white;
-      box-shadow: -4px 0 12px rgba(0,0,0,0.2);
-      overflow-y: auto;
-      padding: 1rem;
-      transition: right 0.4s ease;
-      z-index: 9999;
-    }
-
-    #closeDrawerBtn {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      float: right;
-      cursor: pointer;
-    }
-
-    #moodHistoryBanner {
-      cursor: pointer;
-      margin-top: 2rem;
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
-    <h1>{{ greeting }}, {{ username }} 👋</h1>
-    
-    {% if quote %}
-    <blockquote class="quote-block">"{{ quote }}"</blockquote>
-    {% endif %}
-    {% if reflective_insights %}
-    <div class="insight-section" style="margin-top: 2rem; background: #fef9c3; padding: 1rem; border-radius: 10px;">
-    <h3 style="margin-bottom: 0.5rem;">🧠 Reflective Insights</h3>
-    <ul>
-    {% for insight in reflective_insights %}
-      <li>{{ insight }}</li>
-    {% endfor %}
-    </ul>
-    </div>
-{% endif %}
-
-    {% if streak > 0 %}
-    <p class="streak">🔥 You're on a <strong>{{ streak }}-day streak</strong>! Keep it up! 💪</p>
-    {% else %}
-    <p class="streak">No streak yet. Start tracking your mood daily to build one! 🚀</p>
-    {% endif %}
-
-    {% if last_mood %}
-    <div class="last-mood">
-      <h3>🧠 Last Mood Check-in</h3>
-      <p><strong>Mood:</strong> {{ last_mood.mental_state or "N/A" }}</p>
-      {% if last_mood.journal_entry %}
-        <p><strong>Journal Entry:</strong></p>
-        <blockquote>{{ last_mood.journal_entry }}</blockquote>
-      {% endif %}
-      <ul>
-        {% for tip in last_mood.suggestions %}
-        <li>{{ tip }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% else %}
-    <p>No mood check-ins yet. Let's do your first one! 📝</p>
-    {% endif %}
-
-    <div class="actions">
-      <a href="/mood-tracker">Add Mood Check-in</a>
-      <a href="/logout">Logout</a>
-    </div>
-
-<div id="moodHistoryBanner" style="cursor: pointer; background: #e0f2fe; padding: 1rem; border-radius: 8px; margin-top: 2rem;">
-  <h3>📅 Your Mood History (click to expand)</h3>
-</div>
-
-<!-- Mood History Content -->
-<!-- Mood History Content -->
-<div id="moodHistoryContent" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-  {% if moods %}
-    {% for mood in moods %}
-    <div class="mood-entry" data-id="{{ mood.id }}" style="margin: 1rem 0; padding: 1rem; background: #f1f5f9; border-left: 4px solid #6366f1; border-radius: 6px; position: relative;">
-      <!-- Mood Content -->
-      <p><strong>Mood:</strong> {{ mood.mental_state }}</p>
-      <p><strong>Time:</strong> 
-        {% if mood.timestamp_display %} 
-          {{ mood.timestamp_display }} 
-        {% else %}
-          {{ mood.timestamp.strftime('%b %d, %Y %I:%M %p') if mood.timestamp and not mood.timestamp is string else mood.timestamp }}
-        {% endif %}
-      </p>
-      {% if mood.journal_entry %}
-        <p><em>Journal:</em> {{ mood.journal_entry }}</p>
-      {% endif %}
+  <!-- Sidebar Overlay for Mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  
+  <!-- Modern Closable Sidebar -->
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>🧠 MindMentor</h2>
+        <button class="sidebar-close-btn" id="sidebarCloseBtn">✕</button>
+      </div>
       
-      <!-- Delete Button -->
-      <button class="delete-mood-btn" 
-              style="position: absolute; top: 0.5rem; right: 0.5rem; background: #fee2e2; color: #b91c1c; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer;">
-        🗑️
-      </button>
-    </div>
-    {% endfor %}
-  {% else %}
-    <p style="padding: 1rem;">No mood history yet.</p>
-  {% endif %}
-</div>
-<!-- Mood Summary Section -->
-<!-- Mood Summary Section -->
-{% if mood_summary %}
-<div class="mood-summary">
-  <h3 id="toggle-summary" style="cursor: pointer; color: #6366f1;">
-    📊 Mood Summary <span id="toggle-icon">▼</span>
-  </h3>
-  <div id="summary-content" style="display: none; padding-left: 1rem;">
-    <ul>
-      {% for item in mood_summary %}
-        <li>
-          <strong>{{ item.mood }}</strong> 
-          <span style="color: #64748b;">({{ item.count }} check-in{{ 's' if item.count > 1 else '' }})</span>
-        </li>
-      {% endfor %}
-    </ul>
+      <nav class="sidebar-nav">
+        <a href="/dashboard" class="nav-item active">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Dashboard</span>
+        </a>
+        <a href="{{ url_for('checkin.show_checkin_form') }}" class="nav-item">
+          <span class="nav-icon">📝</span>
+          <span class="nav-text">Check-in</span>
+        </a>
+        <a href="/mood-tracker" class="nav-item">
+          <span class="nav-icon">🧠</span>
+          <span class="nav-text">Mood Tracker</span>
+        </a>
+        <a href="/resources" class="nav-item">
+          <span class="nav-icon">📚</span>
+          <span class="nav-text">Resources</span>
+        </a>
+        <a href="/help" class="nav-item">
+          <span class="nav-icon">🆘</span>
+          <span class="nav-text">Help</span>
+        </a>
+        
+        <div class="nav-divider"></div>
+        
+        <a href="/settings" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Settings</span>
+        </a>
+        <a href="/logout" class="nav-item logout">
+          <span class="nav-icon">🚪</span>
+          <span class="nav-text">Logout</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+      <!-- Enhanced Top Header with Sidebar Toggle -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="sidebar-toggle-btn" id="sidebarToggleBtn">☰</button>
+          <h1>Dashboard</h1>
+        </div>
+        <div class="header-right">
+          <span class="user-greeting">{{ greeting }}, {{ username }}! 👋</span>
+        </div>
+      </header>
+
+      <!-- Dashboard Content -->
+      <div class="dashboard-content">
+        
+        <!-- Welcome Header Card -->
+        <div class="welcome-card dashboard-card">
+          {% if quote %}
+          <blockquote class="quote-display">"{{ quote }}"</blockquote>
+          {% endif %}
+          
+          <div class="stats-row">
+            <div class="stat-item">
+              {% if streak > 0 %}
+              <h3>{{ streak }}</h3>
+              <span>🔥 Day Streak</span>
+              {% else %}
+              <h3>0</h3>
+              <span>🚀 Start Today</span>
+              {% endif %}
+            </div>
+            <div class="stat-item">
+              <h3>{{ moods|length }}</h3>
+              <span>📊 Check-ins</span>
+            </div>
+            <div class="stat-item">
+              <h3>{{ mood_summary|length }}</h3>
+              <span>🎯 Insights</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reflective Insights Card -->
+        {% if reflective_insights %}
+        <div class="insights-card dashboard-card">
+          <h3>🧠 Reflective Insights</h3>
+          <div class="insights-grid">
+            {% for insight in reflective_insights %}
+              <div class="insight-item">{{ insight }}</div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Last Mood Check-in Card -->
+        {% if last_mood %}
+        <div class="last-mood-card dashboard-card">
+          <h3>🧠 Recent Check-in</h3>
+          <div class="mood-details">
+            <div class="mood-state">
+              <span class="mood-badge">{{ last_mood.mental_state or "N/A" }}</span>
+            </div>
+            {% if last_mood.journal_entry %}
+            <div class="journal-preview">
+              <h4>📝 Journal Entry:</h4>
+              <blockquote>{{ last_mood.journal_entry }}</blockquote>
+            </div>
+            {% endif %}
+            
+            <!-- Fixed Suggestions Section -->
+            {% if last_mood.suggestions and last_mood.suggestions != last_mood.diagnosis_tags and last_mood.suggestions|length > 0 %}
+            <div class="suggestions">
+              <h4>💡 Suggestions:</h4>
+              <ul>
+                {% for tip in last_mood.suggestions %}
+                <li>{{ tip }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% elif last_mood.diagnosis_tags and last_mood.diagnosis_tags|length > 0 %}
+            <div class="suggestions">
+              <h4>🏷️ Identified States:</h4>
+              <div class="diagnosis-tags">
+                {% for tag in last_mood.diagnosis_tags %}
+                  <span class="diagnosis-tag">{{ tag }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div class="empty-state-card dashboard-card">
+          <h3>📝 Ready to Start?</h3>
+          <p>No mood check-ins yet. Let's create your first one!</p>
+          <a href="/mood-tracker" class="cta-button">Add First Check-in</a>
+        </div>
+        {% endif %}
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+          <!-- Enhanced Mood Trend Chart -->
+          <div class="mood-chart-section dashboard-card">
+            <div class="chart-header">
+              <h3>📈 Mood Trend Analysis</h3>
+              <div class="chart-controls">
+                <select id="timeRangeSelector" class="time-selector">
+                  <option value="7">Last 7 Days</option>
+                  <option value="30" selected>Last 30 Days</option>
+                  <option value="all">All Time</option>
+                </select>
+                <button id="refreshChart" class="refresh-btn">🔄</button>
+              </div>
+            </div>
+            
+            <div class="chart-container">
+              <canvas id="moodChart"></canvas>
+              <div id="chartLoading" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading mood data...</p>
+              </div>
+              <div id="emptyChart" class="empty-state" style="display: none;">
+                <p>📊 No mood data available for the selected period</p>
+                <small>Start tracking your mood to see trends!</small>
+              </div>
+            </div>
+            
+            <div id="chartInfo" class="chart-info">
+              <span id="dataPointCount">0 data points</span>
+              <span id="dateRange"></span>
+            </div>
+          </div>
+
+          <!-- Weekly Trends Chart -->
+          <div class="weekly-trends-card dashboard-card">
+            <h3>📊 Weekly Mental State Trends</h3>
+            <div class="chart-wrapper">
+              <canvas id="moodTrendChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Pattern & Summary Grid -->
+        <div class="info-grid">
+          <!-- Weekly Pattern -->
+          {% if weekly_mood_trend %}
+          <div class="weekly-pattern-card dashboard-card">
+            <h3>📅 Weekly Mood Pattern</h3>
+            <div class="pattern-grid">
+              {% for day, mood in weekly_mood_trend.items() %}
+                <div class="pattern-day-item">
+                  <div class="day-label">{{ day }}</div>
+                  <div class="mood-indicator {{ mood|lower|replace(' ', '-') }}">
+                    <span class="mood-text">{{ mood }}</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- Mood Summary -->
+          {% if mood_summary %}
+          <div class="mood-summary-card dashboard-card">
+            <div class="summary-header">
+              <h3>📊 Mood Summary</h3>
+              <button id="toggle-summary" class="toggle-btn">
+                <span id="toggle-icon">▼</span>
+              </button>
+            </div>
+            <div id="summary-content" class="summary-content">
+              <div class="summary-list">
+                {% for item in mood_summary %}
+                  <div class="summary-item">
+                    <span class="mood-name">{{ item.mood }}</span>
+                    <span class="mood-count">{{ item.count }} check-in{{ 's' if item.count > 1 else '' }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Mood History & Recent Journals Grid -->
+        <div class="history-grid">
+          <!-- Enhanced Mood History with Cards -->
+          <div class="mood-history-card dashboard-card">
+            <div id="moodHistoryBanner" class="history-banner">
+              <h3>📅 Your Mood History</h3>
+              <span class="expand-text">(click to expand)</span>
+            </div>
+            
+            <div id="moodHistoryContent" class="history-content">
+              {% if moods %}
+                <div class="mood-cards-grid">
+                  {% for mood in moods %}
+                  <div class="mood-history-card-item" data-id="{{ mood.id }}">
+                    <div class="mood-card-header">
+                      <div class="mood-info">
+                        <span class="mood-state-badge {{ mood.mental_state|lower|replace(' ', '-') }}">
+                          {{ mood.mental_state }}
+                        </span>
+                        <span class="mood-timestamp">
+                          {% if mood.timestamp_display %} 
+                            {{ mood.timestamp_display }} 
+                          {% else %}
+                            {{ mood.timestamp.strftime('%b %d, %Y %I:%M %p') if mood.timestamp and not mood.timestamp is string else mood.timestamp }}
+                          {% endif %}
+                        </span>
+                      </div>
+                      <button class="delete-mood-btn" data-id="{{ mood.id }}">🗑️</button>
+                    </div>
+                    
+                    {% if mood.journal_entry %}
+                    <div class="mood-journal-entry">
+                      <h5>📝 Journal Entry</h5>
+                      <p>{{ mood.journal_entry }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if mood.diagnosis_tags %}
+                    <div class="mood-tags">
+                      {% for tag in mood.diagnosis_tags %}
+                        <span class="mood-tag">{{ tag }}</span>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty-history">
+                  <p>No mood history yet.</p>
+                  <a href="/mood-tracker" class="add-mood-link">Start tracking</a>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Recent Journals -->
+          <div class="recent-journals-card dashboard-card">
+            <h3>📝 Recent Reflections</h3>
+            {% set valid_journals = moods|selectattr('journal_entry')|list %}
+            
+            {% if valid_journals %}
+              <div class="journals-list">
+                {% for mood in valid_journals[:3] %}
+                  <div class="journal-item">
+                    <div class="journal-header">
+                      <strong>{{ mood.timestamp.strftime('%a') if mood.timestamp else 'Recent' }}</strong>
+                      <span class="journal-mood-badge">{{ mood.mental_state }}</span>
+                    </div>
+                    <blockquote class="journal-text">{{ mood.journal_entry }}</blockquote>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="empty-journals">
+                <p>✏️ No reflections yet.</p>
+                <a href="/mood-tracker" class="add-journal-link">Add your first journal entry</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </main>
   </div>
-</div>
-{% endif %}
 
-
+  <!-- Floating Journal (repositioned) -->
   <form id="journalForm" class="journal-floating" method="POST" action="/api/mood/journal">
     <textarea name="journal_entry" placeholder="📝 Write your thoughts..." required></textarea>
     <button type="submit">Save Entry</button>
   </form>
 
-  <div id="moodHistoryDrawer" aria-hidden="true">
-    <button id="closeDrawerBtn">✖️</button>
-    <h3 style="margin-top: 2rem;">Your Mood History</h3>
-    {% if moods %}
-      {% for mood in moods %}
-      <div style="margin-bottom: 1rem; padding: 0.5rem; border-left: 4px solid #6366f1; background: #f1f5f9; border-radius: 6px;">
-        <p><strong>Mood:</strong> {{ mood.mental_state }}</p>
-        <p><strong>Time:</strong> {{ mood.timestamp }}</p>
-        {% if mood.journal_entry %}
-          <p><strong>Journal:</strong> {{ mood.journal_entry }}</p>
-        {% endif %}
-        <p>ID: {{ mood.id or "No ID found" }}</p>
+  <!-- All your existing script tags and data -->
+  <script id="moodData" type="application/json">{{ moods | tojson }}</script>
+  <script id="chartConfig" type="application/json">
+  {
+      "defaultTimeRange": 30,
+      "interpolation": true,
+      "clickablePoints": true
+  }
+  </script>
+  <script id="weeklyMoodData" type="application/json">{{ weekly_mood_data | tojson }}</script>
 
-        <button class="delete-btn" data-id="{{ mood.id }}" title="Delete this entry">🗑️</button>
-      </div>
-      {% endfor %}
-    {% else %}
-      <p>No mood history yet.</p>
-    {% endif %}
-    
-  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='js/mood-chart.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
+  <!-- Sidebar Toggle Script -->
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const toggleBtn = document.getElementById('sidebarToggleBtn');
+    const closeBtn = document.getElementById('sidebarCloseBtn');
 
-
-{% if weekly_mood_trend %}
-  <div class="trend-section" style="margin-top: 2rem; background: #e0f2fe; padding: 1rem; border-radius: 10px;">
-    <h3 style="margin-bottom: 0.5rem;">📅 Mood Pattern Over the Week</h3>
-    <ul>
-      {% for day, mood in weekly_mood_trend.items() %}
-        <li><strong>{{ day }}:</strong> {{ mood }}</li>
-      {% endfor %}
-    </ul>
-  </div>
-{% endif %}
-
-<style>
-/* 🔥 CRITICAL: Chart size constraints to prevent infinite growth */
-.mood-trend-chart {
-  height: 500px !important;
-  max-height: 500px !important;
-  width: 100%;
-  margin: 20px 0;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  position: relative;
-}
-
-.mood-trend-chart h3 {
-  margin: 0 0 15px 0;
-  color: #1f2937;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.chart-wrapper {
-  height: 420px !important;
-  max-height: 420px !important;
-  width: 100%;
-  position: relative;
-  background: #fafafa;
-  border-radius: 8px;
-  padding: 10px;
-}
-
-#moodTrendChart {
-  max-height: 400px !important;
-  max-width: 100% !important;
-  width: 100% !important;
-  height: 400px !important;
-}
-</style>
-
-<div class="mood-trend-chart">
-  <h3>📊 Weekly Mental State Trends</h3>
-  <div class="chart-wrapper">
-    <canvas id="moodTrendChart"></canvas>
-  </div>
-</div>
-
-
-<!-- ✅ Mood data must be available BEFORE JS loads -->
-
-
-
-<li><a href="/help">🆘 Help</a></li>
-
-<a href="{{ url_for('checkin.show_checkin_form') }}">📝 Check-In</a>
-
-<div class="mood-chart-section">
-        <div class="chart-header">
-            <h3>📈 Mood Trend Analysis</h3>
-            <div class="chart-controls">
-                <select id="timeRangeSelector" class="time-selector">
-                    <option value="7">Last 7 Days</option>
-                    <option value="30" selected>Last 30 Days</option>
-                    <option value="all">All Time</option>
-                </select>
-                <button id="refreshChart" class="refresh-btn">🔄</button>
-            </div>
-        </div>
-        
-        <div class="chart-container">
-            <canvas id="moodChart" height="300"></canvas>
-            <div id="chartLoading" class="loading-state" style="display: none;">
-                <div class="spinner"></div>
-                <p>Loading mood data...</p>
-            </div>
-            <div id="emptyChart" class="empty-state" style="display: none;">
-                <p>📊 No mood data available for the selected period</p>
-                <small>Start tracking your mood to see trends!</small>
-            </div>
-        </div>
-        
-        <div id="chartInfo" class="chart-info">
-            <span id="dataPointCount">0 data points</span>
-            <span id="dateRange"></span>
-        </div>
-    </div>
-
-    <!-- Data passing scripts -->
-    <script id="moodData" type="application/json">{{ moods | tojson }}</script>
-    <script id="chartConfig" type="application/json">
-    {
-        "defaultTimeRange": 30,
-        "interpolation": true,
-        "clickablePoints": true
-    }
-    </script>
-
-    <!-- Load scripts in correct order -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='js/mood-chart.js') }}"></script>
-    
-    <!-- Your other existing scripts -->
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-
-   <!-- Chart.js CDN -->
-<script id="weeklyMoodData" type="application/json">{{ weekly_mood_data | tojson }}</script>
-<script id="moodData" type="application/json">{{ moods | tojson }}</script>
-
-<!-- Load Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  // Parse weekly mood data
-  const weeklyMoodDataElement = document.getElementById('weeklyMoodData');
-  const chartCanvas = document.getElementById('moodTrendChart');
-  
-  if (weeklyMoodDataElement && chartCanvas) {
-    const weeklyMoodData = JSON.parse(weeklyMoodDataElement.textContent);
-    console.log("📊 Weekly Mood Data:", weeklyMoodData);
-    
-    if (weeklyMoodData && weeklyMoodData.length > 0) {
-      // Destroy existing chart instance if it exists
-      if (window.weeklyTrendChartInstance) {
-        window.weeklyTrendChartInstance.destroy();
-        window.weeklyTrendChartInstance = null;
+    // Toggle sidebar
+    function toggleSidebar() {
+      sidebar.classList.toggle('sidebar-closed');
+      mainContent.classList.toggle('sidebar-closed');
+      
+      // On mobile, show overlay
+      if (window.innerWidth <= 1024) {
+        sidebarOverlay.classList.toggle('active');
+        document.body.classList.toggle('sidebar-open');
       }
-      
-      // Extract all unique tags across weeks
-      const allTagsSet = new Set();
-      weeklyMoodData.forEach(weekData => {
-        Object.keys(weekData).forEach(key => {
-          if (key !== "week") allTagsSet.add(key);
-        });
+    }
+
+    // Close sidebar
+    function closeSidebar() {
+      sidebar.classList.add('sidebar-closed');
+      mainContent.classList.add('sidebar-closed');
+      sidebarOverlay.classList.remove('active');
+      document.body.classList.remove('sidebar-open');
+    }
+
+    // Event listeners
+    toggleBtn.addEventListener('click', toggleSidebar);
+    closeBtn.addEventListener('click', closeSidebar);
+    sidebarOverlay.addEventListener('click', closeSidebar);
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 1024) {
+        sidebarOverlay.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+      }
+    });
+
+    // Auto-close on mobile when clicking nav links
+    document.querySelectorAll('.nav-item').forEach(link => {
+      link.addEventListener('click', function() {
+        if (window.innerWidth <= 1024) {
+          closeSidebar();
+        }
       });
-      const allTags = Array.from(allTagsSet);
+    });
+  });
+  </script>
+
+  <!-- Weekly Chart Script (embedded) -->
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const weeklyMoodDataElement = document.getElementById('weeklyMoodData');
+    const chartCanvas = document.getElementById('moodTrendChart');
+    
+    if (weeklyMoodDataElement && chartCanvas) {
+      const weeklyMoodData = JSON.parse(weeklyMoodDataElement.textContent);
       
-      // Color palette for tags
-      const tagColors = {
-        "Anxiety": "#f97316",
-        "Depression": "#ef4444", 
-        "Burnout": "#facc15",
-        "Healthy": "#10b981",
-        "Stable": "#22c55e",
-        "Stress": "#f59e0b",
-        // Add more colors as needed
-      };
-      
-      // Build datasets
-      const datasets = allTags.map((tag, index) => {
-        return {
+      if (weeklyMoodData && weeklyMoodData.length > 0) {
+        if (window.weeklyTrendChartInstance) {
+          window.weeklyTrendChartInstance.destroy();
+          window.weeklyTrendChartInstance = null;
+        }
+        
+        const allTagsSet = new Set();
+        weeklyMoodData.forEach(weekData => {
+          Object.keys(weekData).forEach(key => {
+            if (key !== "week") allTagsSet.add(key);
+          });
+        });
+        const allTags = Array.from(allTagsSet);
+        
+        const tagColors = {
+          "Anxiety": "#f97316", "Depression": "#ef4444", "Burnout": "#facc15",
+          "Healthy": "#10b981", "Stable": "#22c55e", "Stress": "#f59e0b"
+        };
+        
+        const datasets = allTags.map((tag, index) => ({
           label: tag,
           backgroundColor: tagColors[tag] || `hsl(${(index * 137.5) % 360}, 65%, 70%)`,
           data: weeklyMoodData.map(weekData => weekData[tag] || 0),
           stack: 'mentalStates'
-        };
-      });
-      
-      // Create the chart
-      window.weeklyTrendChartInstance = new Chart(chartCanvas.getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: weeklyMoodData.map(weekData => weekData.week),
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            title: {
-              display: true,
-              text: '📊 Weekly Mental Health Trends'
-            },
-            tooltip: {
-              callbacks: {
-                label: context => `${context.dataset.label}: ${context.raw} check-in(s)`
+        }));
+        
+        window.weeklyTrendChartInstance = new Chart(chartCanvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: weeklyMoodData.map(weekData => weekData.week),
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: true, position: 'bottom' },
+              tooltip: {
+                callbacks: {
+                  label: context => `${context.dataset.label}: ${context.raw} check-in(s)`
+                }
               }
             },
-            legend: {
-              display: true,
-              position: 'bottom'
-            }
-          },
-          scales: {
-            x: {
-              stacked: true,
-              title: { display: true, text: "Week" }
-            },
-            y: {
-              stacked: true,
-              beginAtZero: true,
-              title: { display: true, text: "Check-in Count" }
+            scales: {
+              x: { stacked: true },
+              y: { stacked: true, beginAtZero: true }
             }
           }
-        }
-      });
+        });
+      }
     }
-  }
-});
-</script>
-
-<script id="moodData" type="application/json">
-  {{ moods|tojson }}
-</script>
-
-
-
-<div class="recent-journals">
-  <h3>📝 Recent Reflections</h3>
-  {% set valid_journals = moods|selectattr('journal_entry')|list %}
-  
-  {% if valid_journals %}
-    <ul>
-      {% for mood in valid_journals[:3] %}
-        <li class="journal-item">
-          <strong>{{ mood.timestamp.strftime('%a') }}:</strong>
-          <blockquote>{{ mood.journal_entry }}</blockquote>
-          <span class="mood-badge">{{ mood.mental_state }}</span>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <div class="empty-state">
-      ✏️ No reflections yet. 
-      <a href="/mood-tracker">Add your first journal entry</a>
-    </div>
-  {% endif %}
-</div>
-
-
-
-<script>
-  document.getElementById('moodHistoryBanner').addEventListener('click', function() {
-    const content = document.getElementById('moodHistoryContent');
-    content.style.maxHeight = content.style.maxHeight === '0px' ? 
-      `${content.scrollHeight}px` : '0px';
   });
-  
-</script>
-
+  </script>
 </body>
 </html>

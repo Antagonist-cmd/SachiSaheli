@@ -1,0 +1,61 @@
+<div class="profile-hero-bg">
+  <main class="profile-card">
+    <div class="profile-main">
+      <div class="profile-avatar-section">
+        <img src="{{ user.avatar_url or url_for('static', filename='img/default_avatar.png') }}"
+             alt="profile avatar"
+             class="profile-avatar">
+        <div class="profile-basic">
+          <h2>{{ user.display_name or user.username }}</h2>
+          <span class="profile-username">@{{ user.username }}</span>
+          <span class="profile-member-since">Member since {{ user.joined.strftime('%b %Y') }}</span>
+        </div>
+      </div>
+      <div class="profile-bio">
+        <h4>About Me</h4>
+        <p>{{ user.bio or "No bio yet – add one in settings!" }}</p>
+      </div>
+      <button class="btn profile-edit-btn">Edit Profile</button>
+    </div>
+    <div class="profile-stats">
+      <div>
+        <span class="profile-stat-value">{{ streak }}</span>
+        <span class="profile-stat-label">Day Streak</span>
+      </div>
+      <div>
+        <span class="profile-stat-value">{{ num_checkins }}</span>
+        <span class="profile-stat-label">Total Check-ins</span>
+      </div>
+      <div>
+        <span class="profile-stat-value">{{ top_mood }}</span>
+        <span class="profile-stat-label">Top Mood</span>
+      </div>
+    </div>
+    <div class="profile-badges">
+      <h4>Achievements</h4>
+      {% for badge in badges %}
+        <span class="profile-badge">{{ badge }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="profile-journals">
+      <h4>Recent Journals</h4>
+      {% for entry in recent_journals %}
+        <blockquote>{{ entry.journal_entry|truncate(80) }}</blockquote>
+      {% endfor %}
+      <a href="/journals" class="profile-link">View All Journals →</a>
+    </div>
+    <div class="profile-gratitude">
+      <h4>Top Gratitude Moments</h4>
+      <ul>
+        {% for moment in top_gratitude %}
+          <li>🌱 {{ moment.text|truncate(60) }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="profile-actions">
+      <a href="/export-data" class="btn btn-secondary">Export My Data</a>
+      <a href="/settings" class="btn btn-light">Settings</a>
+    </div>
+  </main>
+</div>

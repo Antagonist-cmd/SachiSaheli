@@ -5,6 +5,7 @@ from flask import Flask, render_template, redirect, session, url_for, jsonify, r
 from flask_cors import CORS
 from dotenv import load_dotenv
 from utils.supabase_client import supabase  # Use single shared client
+from supabase import create_client, Client
 from datetime import datetime, timedelta, timezone
 from collections import Counter, defaultdict
 import random
@@ -13,6 +14,8 @@ from dateutil import parser
 # Setup paths
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://bapvnpcabwpsmxxrmrrj.supabase.co')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhcHZucGNhYndwc214eHJtcnJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzNDk1ODMsImV4cCI6MjA2NTkyNTU4M30.Hq8WAOz_9WL68wjjxaEJfvONQRP_YN7CAB3Q32J6sSY')
 # Load environment variables
 load_dotenv()
 
@@ -20,6 +23,7 @@ load_dotenv()
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")  # store securely in prod
 CORS(app)
+
 
 # Import blueprints after app creation
 from routes.auth_routes import auth_bp
@@ -34,6 +38,51 @@ app.register_blueprint(mood_bp, url_prefix="/api/mood")
 app.register_blueprint(suggestion_bp, url_prefix="/api/suggestions")
 app.register_blueprint(help_bp)
 app.register_blueprint(checkin_bp)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+TAG_MEANINGS = {
+    "Anxiety": "A feeling of worry, nervousness, or unease, typically about an imminent event.",
+    "Burnout": "Physical and mental exhaustion often caused by prolonged stress or overwork.",
+    "Depression": "A persistent feeling of sadness and loss of interest that affects how you feel and act.",
+    "Healthy": "A positive state of mental well-being with good emotional regulation.",
+    "Hopelessness": "A feeling or state of despair; lack of hope.",
+    "Isolation Risk": "Tendency to withdraw socially, which can impact overall mental health.",
+    "Low Self-Esteem": "Viewing yourself in a negative or critical way; lack of confidence.",
+    "Mood Swings": "Rapid, often extreme fluctuations in one's emotional state.",
+    "Stable": "Consistently balanced mood and emotions.",
+    "Stress": "State of mental or emotional strain from challenging circumstances.",
+    # ...add other tags as needed
+}
+TAG_SUGGESTIONS = {
+    "Anxiety": [
+        "Practice deep breathing or grounding exercises.",
+        "Limit caffeine and screen time.",
+        "Try guided meditation or mindfulness apps."
+    ],
+    "Burnout": [
+        "Schedule regular breaks throughout your day.",
+        "Consider light activities like walking or stretching.",
+        "Reach out to someone you trust about how you are feeling."
+    ],
+    "Depression": [
+        "Spend time in sunlight or nature when possible.",
+        "Keep a gratitude journal.",
+        "Talk to a mental health professional if feelings persist."
+    ],
+    "Healthy": [
+        "Maintain your positive routines!",
+        "Keep connecting with friends or loved ones.",
+        "Celebrate small wins and self-care moments."
+    ],
+    "Hopelessness": [
+        "Talk to a trusted friend or counselor about your feelings.",
+        "Reflect on small positive changes each day.",
+        "Remember that feelings are temporary and support is available."
+    ],
+    # ...add more suggestions as needed
+}
+
 
 # Page routes
 @app.route("/")
@@ -480,8 +529,15 @@ def mood_tracker():
             return redirect(url_for("auth.login"))
         except:
             return redirect(url_for("login_page"))
-    
-    return render_template("mood_tracker.html")
+    # You may fetch previous diagnosis tags from session, DB, or elsewhere if you want
+    # For now simply pass the mappings so you can use them in the template
+
+    return render_template(
+        "mood_tracker.html",
+        tag_meanings=TAG_MEANINGS,
+        tag_suggestions=TAG_SUGGESTIONS,
+    )
+
 
 @app.route("/logout")
 def logout_redirect():
