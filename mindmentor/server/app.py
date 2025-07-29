@@ -10,7 +10,19 @@ from datetime import datetime, timedelta, timezone
 from collections import Counter, defaultdict
 import random
 from dateutil import parser
-
+from flask import make_response, jsonify
+from helpers import export_user_data
+from helpers import (
+    get_user_profile_data,
+    get_user_mood_stats,
+    get_user_badges,
+    get_recent_journals,
+    get_top_gratitude,
+    calculate_user_streak,
+    get_mood_analytics,
+    calculate_improvements,
+    get_weekly_activity
+)
 # Setup paths
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -501,6 +513,97 @@ def dashboard():
             weekly_mood_data=[],
             time_range=time_range  # 🔧 NEW: Pass time range to template
         )
+
+@app.route("/profile")
+def profile():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+    
+    user_id = session["user_id"]
+    
+    # Existing data
+    user_data = get_user_profile_data(user_id)
+    mood_stats = get_user_mood_stats(user_id)
+    badges = get_user_badges(user_id)
+    recent_journals = get_recent_journals(user_id)
+    top_gratitude = get_top_gratitude(user_id)
+    
+    # NEW: Analytics data
+    analytics = get_mood_analytics(user_id)
+    weekly_activity = get_weekly_activity(user_id)
+    
+    # Format created_at for display
+    if user_data.get("created_at"):
+        created_date = datetime.fromisoformat(user_data["created_at"].replace("Z", "+00:00"))
+        user_data["created_at_display"] = created_date.strftime("%b %Y")
+    else:
+        user_data["created_at_display"] = "Recently"
+    
+    return render_template(
+        "profile.html",
+        user=user_data,
+        streak=mood_stats["streak"],
+        num_checkins=mood_stats["num_checkins"],
+        top_mood=mood_stats["top_mood"],
+        badges=badges,
+        recent_journals=recent_journals,
+        top_gratitude=top_gratitude,
+        analytics=analytics,
+        weekly_activity=weekly_activity
+    )
+
+
+@app.route("/export-data/<format>")
+def export_data(format):
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+    
+    user_id = session["user_id"]
+    
+    if format not in ['json', 'csv']:
+        return jsonify({"error": "Invalid format. Use 'json' or 'csv'"}), 400
+    
+    try:
+        exported_data = export_user_data(user_id, format)
+        
+        if exported_data is None:
+            return jsonify({"error": "Failed to export data"}), 500
+        
+        if format == 'json':
+            response = make_response(jsonify(exported_data))
+            response.headers['Content-Disposition'] = f'attachment; filename=mindmentor_data_{user_id}_{datetime.now().strftime("%Y%m%d")}.json'
+            response.headers['Content-Type'] = 'application/json'
+        else:  # CSV
+            response = make_response(exported_data)
+            response.headers['Content-Disposition'] = f'attachment; filename=mindmentor_data_{user_id}_{datetime.now().strftime("%Y%m%d")}.csv'
+            response.headers['Content-Type'] = 'text/csv'
+        
+        return response
+        
+    except Exception as e:
+        return jsonify({"error": f"Export failed: {str(e)}"}), 500
+
+@app.route("/delete-account", methods=['POST'])
+def delete_account():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login"))
+    
+    user_id = session["user_id"]
+    
+    try:
+        # Delete all user data (in reverse dependency order)
+        supabase.table("gratitude_entries").delete().eq("user_id", user_id).execute()
+        supabase.table("journals").delete().eq("user_id", user_id).execute()
+        supabase.table("mood_checkins").delete().eq("user_id", user_id).execute()
+        supabase.table("profiles").delete().eq("id", user_id).execute()
+        
+        # Clear session
+        session.clear()
+        
+        return jsonify({"message": "Account deleted successfully"}), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete account: {str(e)}"}), 500
 
 
 @app.route('/delete_mood/<mood_id>', methods=['DELETE'])

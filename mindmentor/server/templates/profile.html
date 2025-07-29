@@ -1,61 +1,420 @@
-<div class="profile-hero-bg">
-  <main class="profile-card">
-    <div class="profile-main">
-      <div class="profile-avatar-section">
-        <img src="{{ user.avatar_url or url_for('static', filename='img/default_avatar.png') }}"
-             alt="profile avatar"
-             class="profile-avatar">
-        <div class="profile-basic">
-          <h2>{{ user.display_name or user.username }}</h2>
-          <span class="profile-username">@{{ user.username }}</span>
-          <span class="profile-member-since">Member since {{ user.joined.strftime('%b %Y') }}</span>
-        </div>
-      </div>
-      <div class="profile-bio">
-        <h4>About Me</h4>
-        <p>{{ user.bio or "No bio yet – add one in settings!" }}</p>
-      </div>
-      <button class="btn profile-edit-btn">Edit Profile</button>
-    </div>
-    <div class="profile-stats">
-      <div>
-        <span class="profile-stat-value">{{ streak }}</span>
-        <span class="profile-stat-label">Day Streak</span>
-      </div>
-      <div>
-        <span class="profile-stat-value">{{ num_checkins }}</span>
-        <span class="profile-stat-label">Total Check-ins</span>
-      </div>
-      <div>
-        <span class="profile-stat-value">{{ top_mood }}</span>
-        <span class="profile-stat-label">Top Mood</span>
-      </div>
-    </div>
-    <div class="profile-badges">
-      <h4>Achievements</h4>
-      {% for badge in badges %}
-        <span class="profile-badge">{{ badge }}</span>
-      {% endfor %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | MindMentor</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- ==================== SIDEBAR OVERLAY ==================== -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- ==================== APP LAYOUT ==================== -->
+    <div class="app-layout">
+        
+        <!-- ==================== SIDEBAR ==================== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>🧠 MindMentor</h2>
+                <button class="sidebar-close-btn" id="sidebarCloseBtn">✕</button>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="/profile" class="nav-item active">
+                    <span class="nav-icon">👤</span>
+                    <span class="nav-text">Profile</span>
+                </a>
+                <!-- Additional nav items can be added here -->
+            </nav>
+        </aside>
+
+        <!-- ==================== MAIN CONTENT ==================== -->
+        <main class="main-content" id="mainContent">
+            
+            <!-- ==================== TOP HEADER ==================== -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle-btn" id="sidebarToggleBtn">☰</button>
+                    <h1>Profile</h1>
+                </div>
+                <div class="header-right">
+                    <span class="user-greeting">Hello, {{ user.username }}! 👋</span>
+                </div>
+            </header>
+
+            <!-- ==================== DASHBOARD CONTENT ==================== -->
+            <div class="dashboard-content">
+                
+                <!-- ==================== PROFILE MAIN CARD ==================== -->
+                <div class="profile-main-card dashboard-card">
+                    
+                    <!-- Profile Header Section -->
+                    <div class="profile-header">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-info">
+                            <h2>{{ user.username }}</h2>
+                            <span class="profile-member-since">Member since {{ user.created_at }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Profile Statistics Grid -->
+                    <div class="profile-stats-grid">
+                        <div class="stat-card">
+                            <h3>{{ streak }}</h3>
+                            <span>🔥 Day Streak</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>{{ num_checkins }}</h3>
+                            <span>📊 Check-ins</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3>{{ top_mood }}</h3>
+                            <span>😊 Top Mood</span>
+                        </div>
+                    </div>
+
+                    <!-- Mental Health Metrics Section (Last 30 Days) -->
+                    {% if analytics.avg_metrics %}
+                    <div class="profile-analytics">
+                        <h4>📊 Your Mental Health Metrics (Last 30 Days)</h4>
+                        <div class="metrics-grid">
+                            {% for metric, value in analytics.avg_metrics.items() %}
+                            <div class="metric-card">
+                                <div class="metric-value">{{ value }}/10</div>
+                                <div class="metric-name">{{ metric.replace('_', ' ').title() }}</div>
+                                <div class="metric-bar">
+                                    <div class="metric-fill" data-value="{{ value }}"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Progress/Improvement Areas Section -->
+                    {% if analytics.improvement_areas %}
+                    <div class="profile-improvements">
+                        <h4>📈 Your Progress</h4>
+                        <div class="improvements-list">
+                            {% for improvement in analytics.improvement_areas %}
+                            <div class="improvement-item">
+                                <span class="improvement-metric">{{ improvement.metric }}</span>
+                                <span class="improvement-change positive">{{ improvement.change }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Mood Patterns Section -->
+                    {% if analytics.mood_distribution %}
+                    <div class="profile-moods">
+                        <h4>🎭 Your Mood Patterns</h4>
+                        <div class="mood-tags-grid">
+                            {% for mood, count in analytics.mood_distribution.items() %}
+                            <div class="mood-tag-item">
+                                <span class="mood-tag-name">{{ mood }}</span>
+                                <span class="mood-tag-count">{{ count }}x</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Achievements/Badges Section -->
+                    {% if badges %}
+                    <div class="profile-badges">
+                        <h4>🏆 Achievements</h4>
+                        <div class="badges-list">
+                            {% for badge in badges %}
+                                <span class="badge">{{ badge }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Recent Journals Section -->
+                    {% if recent_journals %}
+                    <div class="profile-journals">
+                        <h4>📝 Recent Journals</h4>
+                        {% for journal in recent_journals %}
+                            <div class="journal-preview">
+                                {{ journal.entry[:100] }}...
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <!-- ==================== PROFILE ACTIONS SECTION ==================== -->
+                <div class="profile-actions-section">
+                    <h4>📁 Data & Account Management</h4>
+                    <div class="action-buttons">
+                        <a href="/export-data/json" class="action-btn export-btn" download>
+                            📄 Export Data (JSON)
+                        </a>
+                        <a href="/export-data/csv" class="action-btn export-btn" download>
+                            📊 Export Data (CSV)
+                        </a>
+                        <button id="editProfileBtn" class="action-btn edit-btn">
+                            ✏️ Edit Profile
+                        </button>
+                        <button id="deleteAccountBtn" class="action-btn danger-btn">
+                            🗑️ Delete Account
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
     </div>
 
-    <div class="profile-journals">
-      <h4>Recent Journals</h4>
-      {% for entry in recent_journals %}
-        <blockquote>{{ entry.journal_entry|truncate(80) }}</blockquote>
-      {% endfor %}
-      <a href="/journals" class="profile-link">View All Journals →</a>
+    <!-- ==================== EDIT PROFILE MODAL ==================== -->
+    <div id="editProfileModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h3>✏️ Edit Profile</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+
+            <!-- Edit Profile Form -->
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label for="editUsername">Username</label>
+                    <input type="text" id="editUsername" value="{{ user.username }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editBio">About Me</label>
+                    <textarea id="editBio" rows="3" placeholder="Tell us about yourself...">{{ user.bio or '' }}</textarea>
+                </div>
+                
+                <!-- Modal Actions -->
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+
+        </div>
     </div>
-    <div class="profile-gratitude">
-      <h4>Top Gratitude Moments</h4>
-      <ul>
-        {% for moment in top_gratitude %}
-          <li>🌱 {{ moment.text|truncate(60) }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-    <div class="profile-actions">
-      <a href="/export-data" class="btn btn-secondary">Export My Data</a>
-      <a href="/settings" class="btn btn-light">Settings</a>
-    </div>
-  </main>
-</div>
+
+    <!-- ==================== JAVASCRIPT SECTION ==================== -->
+    
+    <!-- Sidebar Functionality Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // ==================== DOM ELEMENTS ====================
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            const closeBtn = document.getElementById('sidebarCloseBtn');
+
+            // ==================== SIDEBAR FUNCTIONS ====================
+            function toggleSidebar() {
+                sidebar.classList.toggle('sidebar-closed');
+                mainContent.classList.toggle('sidebar-closed');
+                
+                if (window.innerWidth <= 1024) {
+                    sidebarOverlay.classList.toggle('active');
+                    document.body.classList.toggle('sidebar-open');
+                }
+            }
+
+            function closeSidebar() {
+                sidebar.classList.add('sidebar-closed');
+                mainContent.classList.add('sidebar-closed');
+                sidebarOverlay.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+            }
+
+            // ==================== EVENT LISTENERS ====================
+            toggleBtn.addEventListener('click', toggleSidebar);
+            closeBtn.addEventListener('click', closeSidebar);
+            sidebarOverlay.addEventListener('click', closeSidebar);
+
+            // Close sidebar when clicking nav items on mobile
+            document.querySelectorAll('.nav-item').forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth <= 1024) {
+                        closeSidebar();
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- Profile Management Script -->
+    <script>
+        // ==================== PROFILE MODAL FUNCTIONS ====================
+        
+        /**
+         * Opens the edit profile modal
+         */
+        function openEditModal() {
+            document.getElementById('editProfileModal').style.display = 'flex';
+        }
+
+        /**
+         * Closes the edit profile modal
+         */
+        function closeEditModal() {
+            document.getElementById('editProfileModal').style.display = 'none';
+        }
+
+        /**
+         * Handles account deletion with multiple confirmations
+         */
+        async function handleAccountDeletion() {
+            const firstConfirm = confirm(
+                '⚠️ Are you absolutely sure you want to delete your account?\n\n' +
+                'This will permanently delete all your mood data, journals, and account information. ' +
+                'This action cannot be undone.'
+            );
+
+            if (!firstConfirm) return;
+
+            const secondConfirm = confirm(
+                'This is your final warning. Type "DELETE" to confirm account deletion.'
+            );
+
+            if (!secondConfirm) return;
+
+            const userConfirm = prompt('Type "DELETE" (all caps) to confirm:');
+            
+            if (userConfirm === 'DELETE') {
+                await deleteAccount();
+            } else {
+                alert('Account deletion cancelled - confirmation text did not match.');
+            }
+        }
+
+        /**
+         * Sends DELETE request to server and handles response
+         */
+        async function deleteAccount() {
+            try {
+                const response = await fetch('/delete-account', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    alert('Account deleted successfully. You will be redirected to the login page.');
+                    window.location.href = '/login';
+                } else {
+                    const error = await response.json();
+                    alert('Error deleting account: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Delete account error:', error);
+                alert('Error deleting account: ' + error.message);
+            }
+        }
+
+        /**
+         * Handles profile form submission
+         */
+        async function handleProfileUpdate(event) {
+            event.preventDefault();
+            
+            const formData = {
+                username: document.getElementById('editUsername').value,
+                bio: document.getElementById('editBio').value
+            };
+
+            try {
+                const response = await fetch('/update-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('Profile updated successfully!');
+                    closeEditModal();
+                    location.reload(); // Refresh to show updated data
+                } else {
+                    const error = await response.json();
+                    alert('Error updating profile: ' + error.error);
+                }
+            } catch (error) {
+                console.error('Profile update error:', error);
+                alert('Error updating profile: ' + error.message);
+            }
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Edit Profile Button
+            const editProfileBtn = document.getElementById('editProfileBtn');
+            if (editProfileBtn) {
+                editProfileBtn.addEventListener('click', openEditModal);
+            }
+
+            // Delete Account Button
+            const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+            if (deleteAccountBtn) {
+                deleteAccountBtn.addEventListener('click', handleAccountDeletion);
+            }
+
+            // Modal Close Button
+            const modalCloseBtn = document.querySelector('.modal-close');
+            if (modalCloseBtn) {
+                modalCloseBtn.addEventListener('click', closeEditModal);
+            }
+
+            // Close modal when clicking outside
+            const editProfileModal = document.getElementById('editProfileModal');
+            if (editProfileModal) {
+                editProfileModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeEditModal();
+                    }
+                });
+            }
+
+            // Profile Form Submission
+            const editProfileForm = document.getElementById('editProfileForm');
+            if (editProfileForm) {
+                editProfileForm.addEventListener('submit', handleProfileUpdate);
+            }
+
+            // ESC key to close modal
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeEditModal();
+                }
+            });
+
+            // ==================== METRIC BARS ANIMATION ====================
+            // Set width for metric fill bars based on data-value
+            const metricFills = document.querySelectorAll('.metric-fill');
+            metricFills.forEach(fill => {
+                const value = parseFloat(fill.dataset.value);
+                const percentage = (value / 10) * 100;
+                
+                // Add smooth animation
+                setTimeout(() => {
+                    fill.style.width = percentage + '%';
+                }, 100);
+            });
+        });
+    </script>
+
+</body>
+</html>
