@@ -1,7 +1,7 @@
 # server/app.py
 import os
 import sys
-from flask import Flask, render_template, redirect, session, url_for, jsonify, request
+from flask import Flask, render_template, redirect, session, url_for, jsonify, request, flash
 from flask_cors import CORS
 from dotenv import load_dotenv
 from utils.supabase_client import supabase  # Use single shared client
@@ -552,6 +552,303 @@ def profile():
         weekly_activity=weekly_activity
     )
 
+@app.route("/discover")
+def discover_users():
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+    
+    query = request.args.get('q', '')
+    users = []
+    
+    if query:
+        try:
+            print(f"🔍 Searching for: '{query}'")
+            
+            # SIMPLIFIED: Just search profiles without privacy join
+            result = supabase.table('profiles')\
+                .select('*')\
+                .ilike('username', f'%{query}%')\
+                .neq('id', session['user_id'])\
+                .limit(20)\
+                .execute()
+            
+            print(f"📊 Raw result: {result}")
+            users = result.data or []
+            
+        except Exception as e:
+            print(f"❌ Search error: {str(e)}")
+            users = []
+    
+    return render_template("discover.html", users=users, query=query)
+
+
+@app.route("/social-profile/<user_id>")
+def view_social_profile(user_id):
+    """View another user's social profile"""
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+    
+    current_user_id = session['user_id']
+    
+    # Don't allow viewing your own profile this way
+    if user_id == current_user_id:
+        return redirect('/profile')
+    
+    try:
+        # Get user profile
+        profile_result = supabase.table('profiles')\
+            .select('*')\
+            .eq('id', user_id)\
+            .single()\
+            .execute()
+        
+        if not profile_result.data:
+            flash("User not found", "error")
+            return redirect('/discover')
+        
+        profile = profile_result.data
+        
+        # Get privacy settings
+        privacy_result = supabase.table('user_privacy')\
+            .select('*')\
+            .eq('user_id', user_id)\
+            .execute()
+        
+        privacy = privacy_result.data[0] if privacy_result.data else {
+            'profile_visibility': 'public',
+            'mood_visibility': 'friends',
+            'streak_visibility': 'friends'
+        }
+        
+        # Check friendship status
+        friendship_result = supabase.table('friends')\
+            .select('*')\
+            .or_(f'and(requester_id.eq.{current_user_id},addressee_id.eq.{user_id}),and(requester_id.eq.{user_id},addressee_id.eq.{current_user_id})')\
+            .execute()
+        
+        friendship = friendship_result.data[0] if friendship_result.data else None
+        
+        # Determine what user can see based on privacy + friendship
+        can_view_profile = privacy['profile_visibility'] == 'public' or \
+                          (friendship and friendship['status'] == 'accepted')
+        
+        can_view_mood = privacy['mood_visibility'] == 'public' or \
+                       (friendship and friendship['status'] == 'accepted' and privacy['mood_visibility'] == 'friends')
+        
+        can_view_streak = privacy['streak_visibility'] == 'public' or \
+                         (friendship and friendship['status'] == 'accepted' and privacy['streak_visibility'] == 'friends')
+        
+        # Get mood data if allowed
+        mood_data = {}
+        if can_view_mood:
+            mood_result = supabase.table('mood_checkins')\
+                .select('*')\
+                .eq('user_id', user_id)\
+                .order('timestamp', desc=True)\
+                .limit(7)\
+                .execute()
+            
+            moods = mood_result.data or []
+            mood_data = {
+                'recent_mood': moods[0] if moods else None,
+                'streak': calculate_streak(moods) if can_view_streak else None,
+                'mood_summary': process_mood_summary(moods[:5])
+            }
+        
+        return render_template("social_profile.html", 
+                             profile=profile,
+                             friendship=friendship,
+                             privacy=privacy,
+                             can_view_profile=can_view_profile,
+                             can_view_mood=can_view_mood,
+                             can_view_streak=can_view_streak,
+                             mood_data=mood_data)
+        
+    except Exception as e:
+        print(f"Profile view error: {str(e)}")
+        flash("Error loading profile", "error")
+        return redirect('/discover')
+
+@app.route("/send-friend-request/<user_id>", methods=['POST'])
+def send_friend_request(user_id):
+    """Send a friend request"""
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    current_user_id = session['user_id']
+    
+    if user_id == current_user_id:
+        return jsonify({"error": "Cannot send request to yourself"}), 400
+    
+    try:
+        # Check if request already exists
+        existing = supabase.table('friends')\
+            .select('*')\
+            .or_(f'and(requester_id.eq.{current_user_id},addressee_id.eq.{user_id}),and(requester_id.eq.{user_id},addressee_id.eq.{current_user_id})')\
+            .execute()
+        
+        if existing.data:
+            return jsonify({"error": "Request already exists"}), 400
+        
+        # Send new request
+        supabase.table('friends').insert({
+            'requester_id': current_user_id,
+            'addressee_id': user_id,
+            'status': 'pending'
+        }).execute()
+        
+        return jsonify({"success": True, "message": "Friend request sent!"})
+        
+    except Exception as e:
+        print(f"Friend request error: {str(e)}")
+        return jsonify({"error": "Failed to send request"}), 500
+
+@app.route("/respond-friend-request/<request_id>/<action>", methods=['POST'])
+def respond_friend_request(request_id, action):
+    """Accept or decline a friend request"""
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    if action not in ['accepted', 'declined']:
+        return jsonify({"error": "Invalid action"}), 400
+    
+    try:
+        # Verify this request is for current user
+        request_result = supabase.table('friends')\
+            .select('*')\
+            .eq('id', request_id)\
+            .eq('addressee_id', session['user_id'])\
+            .eq('status', 'pending')\
+            .single()\
+            .execute()
+        
+        if not request_result.data:
+            return jsonify({"error": "Request not found"}), 404
+        
+        # Update request status
+        supabase.table('friends')\
+            .update({'status': action, 'updated_at': 'now()'})\
+            .eq('id', request_id)\
+            .execute()
+        
+        return jsonify({"success": True, "message": f"Request {action}!"})
+        
+    except Exception as e:
+        print(f"Response error: {str(e)}")
+        return jsonify({"error": "Failed to respond"}), 500
+
+@app.route("/friends")
+def friends_list():
+    """View friends and pending requests"""
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+    
+    user_id = session['user_id']
+    
+    try:
+        # Get all friend relationships
+        friends_result = supabase.table('friends')\
+            .select('*, requester:requester_id(username, full_name, avatar_url), addressee:addressee_id(username, full_name, avatar_url)')\
+            .or_(f'requester_id.eq.{user_id},addressee_id.eq.{user_id}')\
+            .execute()
+        
+        relationships = friends_result.data or []
+        
+        # Categorize relationships
+        friends = []
+        sent_requests = []
+        received_requests = []
+        
+        for rel in relationships:
+            if rel['status'] == 'accepted':
+                # Determine which profile to show
+                friend_profile = rel['addressee'] if rel['requester_id'] == user_id else rel['requester']
+                friend_profile['user_id'] = rel['addressee_id'] if rel['requester_id'] == user_id else rel['requester_id']
+                friends.append(friend_profile)
+            elif rel['status'] == 'pending':
+                if rel['requester_id'] == user_id:
+                    sent_requests.append({**rel, 'profile': rel['addressee']})
+                else:
+                    received_requests.append({**rel, 'profile': rel['requester']})
+        
+        return render_template("friends.html",
+                             friends=friends,
+                             sent_requests=sent_requests,
+                             received_requests=received_requests)
+        
+    except Exception as e:
+        print(f"Friends list error: {str(e)}")
+        return render_template("friends.html", friends=[], sent_requests=[], received_requests=[])
+
+@app.route("/privacy-settings")
+def privacy_settings():
+    """User privacy settings page"""
+    if "user_id" not in session:
+        return redirect(url_for("login_page"))
+    
+    user_id = session['user_id']
+    
+    try:
+        privacy_result = supabase.table('user_privacy')\
+            .select('*')\
+            .eq('user_id', user_id)\
+            .execute()
+        
+        privacy = privacy_result.data[0] if privacy_result.data else {
+            'profile_visibility': 'public',
+            'mood_visibility': 'friends',
+            'streak_visibility': 'friends',
+            'searchable': True
+        }
+        
+        return render_template("privacy_settings.html", privacy=privacy)
+        
+    except Exception as e:
+        print(f"Privacy settings error: {str(e)}")
+        return render_template("privacy_settings.html", privacy={})
+
+@app.route("/update-privacy", methods=['POST'])
+def update_privacy():
+    """Update user privacy settings"""
+    if "user_id" not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    user_id = session['user_id']
+    
+    try:
+        privacy_data = {
+            'user_id': user_id,
+            'profile_visibility': request.form.get('profile_visibility', 'public'),
+            'mood_visibility': request.form.get('mood_visibility', 'friends'),
+            'streak_visibility': request.form.get('streak_visibility', 'friends'),
+            'searchable': 'searchable' in request.form
+        }
+        
+        # Upsert privacy settings
+        supabase.table('user_privacy')\
+            .upsert(privacy_data)\
+            .execute()
+        
+        return jsonify({"success": True, "message": "Privacy settings updated!"})
+        
+    except Exception as e:
+        print(f"Update privacy error: {str(e)}")
+        return jsonify({"error": "Failed to update settings"}), 500
+
+# Helper function for mood summary
+def process_mood_summary(moods):
+    """Process recent moods for social profile display"""
+    if not moods:
+        return []
+    
+    mood_counts = Counter()
+    for mood in moods:
+        tags = mood.get('diagnosis_tags', [])
+        if isinstance(tags, list):
+            for tag in tags:
+                mood_counts[tag] += 1
+    
+    return [{"mood": mood, "count": count} for mood, count in mood_counts.most_common(3)]
 
 @app.route("/export-data/<format>")
 def export_data(format):

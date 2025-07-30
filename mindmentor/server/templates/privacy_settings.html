@@ -1,0 +1,771 @@
+{% extends "base.html" %}
+{% block title %}Privacy Settings - MindMentor{% endblock %}
+
+{% block content %}
+<div class="privacy-page">
+    <div class="privacy-container">
+        
+        <!-- Page Header -->
+        <div class="privacy-header">
+            <div class="privacy-header-content">
+                <h1 class="privacy-page-title">
+                    <span class="privacy-page-icon">🔒</span>
+                    Privacy Settings
+                </h1>
+                <p class="privacy-page-subtitle">Control who can see your information and how you're discovered by others</p>
+            </div>
+        </div>
+
+        <!-- Privacy Form -->
+        <div class="privacy-form-section">
+            <form id="privacyForm" class="privacy-form">
+                
+                <!-- Profile Visibility -->
+                <div class="privacy-setting-group">
+                    <div class="privacy-setting-header">
+                        <h3 class="privacy-setting-title">
+                            <span class="privacy-setting-icon">👤</span>
+                            Profile Visibility
+                        </h3>
+                        <p class="privacy-setting-description">Who can see your basic profile information</p>
+                    </div>
+                    
+                    <div class="privacy-setting-options">
+                        <label class="privacy-option">
+                            <input type="radio" name="profile_visibility" value="public" 
+                                   {{ 'checked' if privacy.profile_visibility == 'public' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">🌍 Public</div>
+                                <div class="privacy-option-desc">Anyone can see your profile</div>
+                            </div>
+                        </label>
+                        
+                        <label class="privacy-option">
+                            <input type="radio" name="profile_visibility" value="friends" 
+                                   {{ 'checked' if privacy.profile_visibility == 'friends' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">👥 Friends Only</div>
+                                <div class="privacy-option-desc">Only your friends can see your profile</div>
+                            </div>
+                        </label>
+                        
+                        <label class="privacy-option">
+                            <input type="radio" name="profile_visibility" value="private" 
+                                   {{ 'checked' if privacy.profile_visibility == 'private' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">🔒 Private</div>
+                                <div class="privacy-option-desc">Only you can see your profile</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Mood Data Visibility -->
+                <div class="privacy-setting-group">
+                    <div class="privacy-setting-header">
+                        <h3 class="privacy-setting-title">
+                            <span class="privacy-setting-icon">🎭</span>
+                            Mood Data Sharing
+                        </h3>
+                        <p class="privacy-setting-description">Who can see your mood check-ins and mental health data</p>
+                    </div>
+                    
+                    <div class="privacy-setting-options">
+                        <label class="privacy-option">
+                            <input type="radio" name="mood_visibility" value="public" 
+                                   {{ 'checked' if privacy.mood_visibility == 'public' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">🌍 Public</div>
+                                <div class="privacy-option-desc">Anyone can see your mood summaries</div>
+                            </div>
+                        </label>
+                        
+                        <label class="privacy-option">
+                            <input type="radio" name="mood_visibility" value="friends" 
+                                   {{ 'checked' if privacy.mood_visibility == 'friends' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">👥 Friends Only</div>
+                                <div class="privacy-option-desc">Only your friends can see mood data</div>
+                            </div>
+                        </label>
+                        
+                        <label class="privacy-option">
+                            <input type="radio" name="mood_visibility" value="private" 
+                                   {{ 'checked' if privacy.mood_visibility == 'private' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">🔒 Private</div>
+                                <div class="privacy-option-desc">Keep your mood data completely private</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Streak Visibility -->
+                <div class="privacy-setting-group">
+                    <div class="privacy-setting-header">
+                        <h3 class="privacy-setting-title">
+                            <span class="privacy-setting-icon">🔥</span>
+                            Streak & Progress
+                        </h3>
+                        <p class="privacy-setting-description">Who can see your consistency streaks and progress</p>
+                    </div>
+                    
+                    <div class="privacy-setting-options">
+                        <label class="privacy-option">
+                            <input type="radio" name="streak_visibility" value="public" 
+                                   {{ 'checked' if privacy.streak_visibility == 'public' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">🌍 Public</div>
+                                <div class="privacy-option-desc">Show your streaks to motivate others</div>
+                            </div>
+                        </label>
+                        
+                        <label class="privacy-option">
+                            <input type="radio" name="streak_visibility" value="friends" 
+                                   {{ 'checked' if privacy.streak_visibility == 'friends' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">👥 Friends Only</div>
+                                <div class="privacy-option-desc">Share progress with friends for support</div>
+                            </div>
+                        </label>
+                        
+                        <label class="privacy-option">
+                            <input type="radio" name="streak_visibility" value="private" 
+                                   {{ 'checked' if privacy.streak_visibility == 'private' else '' }}>
+                            <div class="privacy-option-content">
+                                <div class="privacy-option-title">🔒 Private</div>
+                                <div class="privacy-option-desc">Keep your progress private</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Searchability -->
+                <div class="privacy-setting-group">
+                    <div class="privacy-setting-header">
+                        <h3 class="privacy-setting-title">
+                            <span class="privacy-setting-icon">🔍</span>
+                            Discoverability
+                        </h3>
+                        <p class="privacy-setting-description">Control how others can find you</p>
+                    </div>
+                    
+                    <div class="privacy-setting-toggle">
+                        <label class="privacy-toggle">
+                            <input type="checkbox" name="searchable" 
+                                   {{ 'checked' if privacy.searchable else '' }}>
+                            <div class="privacy-toggle-slider"></div>
+                            <div class="privacy-toggle-content">
+                                <div class="privacy-toggle-title">Allow others to find me in search</div>
+                                <div class="privacy-toggle-desc">When disabled, you won't appear in user search results</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="privacy-form-footer">
+                    <button type="submit" class="privacy-btn privacy-btn-primary" id="saveButton">
+                        <span class="privacy-btn-icon">💾</span>
+                        Save Privacy Settings
+                    </button>
+                    
+                    <a href="/friends" class="privacy-btn privacy-btn-secondary">
+                        <span class="privacy-btn-icon">👥</span>
+                        Back to Friends
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Privacy Tips -->
+        <div class="privacy-tips-section">
+            <div class="privacy-tips-header">
+                <h3 class="privacy-tips-title">
+                    <span class="privacy-tips-icon">💡</span>
+                    Privacy Tips
+                </h3>
+            </div>
+            
+            <div class="privacy-tips-grid">
+                <div class="privacy-tip">
+                    <div class="privacy-tip-icon">🛡️</div>
+                    <div class="privacy-tip-content">
+                        <h4 class="privacy-tip-title">Your Data, Your Choice</h4>
+                        <p class="privacy-tip-text">You have complete control over who sees your mental health data. Change these settings anytime.</p>
+                    </div>
+                </div>
+                
+                <div class="privacy-tip">
+                    <div class="privacy-tip-icon">🤝</div>
+                    <div class="privacy-tip-content">
+                        <h4 class="privacy-tip-title">Building Connections</h4>
+                        <p class="privacy-tip-text">Sharing with friends can provide mutual support and accountability on your mental health journey.</p>
+                    </div>
+                </div>
+                
+                <div class="privacy-tip">
+                    <div class="privacy-tip-icon">🔒</div>
+                    <div class="privacy-tip-content">
+                        <h4 class="privacy-tip-title">Safe by Default</h4>
+                        <p class="privacy-tip-text">We believe in privacy by design. Your most sensitive data is friends-only by default.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Messages -->
+<div id="privacyToastContainer" class="privacy-toast-container"></div>
+
+<!-- Flash Messages Data -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<script id="privacyFlashMessages" type="application/json">
+[
+{% for category, message in messages %}
+    {"category": "{{ category }}", "message": "{{ message|e }}"}{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+</script>
+{% endif %}
+{% endwith %}
+
+<script>
+// Privacy form submission
+document.getElementById('privacyForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const saveButton = document.getElementById('saveButton');
+    const originalContent = saveButton.innerHTML;
+    
+    // Show loading state
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<span class="privacy-btn-icon">⏳</span> Saving...';
+    
+    try {
+        const formData = new FormData(this);
+        
+        const response = await fetch('/update-privacy', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showPrivacyToast(data.message, 'success');
+            saveButton.innerHTML = '<span class="privacy-btn-icon">✅</span> Saved!';
+            
+            // Reset button after delay
+            setTimeout(function() {
+                saveButton.disabled = false;
+                saveButton.innerHTML = originalContent;
+            }, 2000);
+        } else {
+            showPrivacyToast(data.error || 'Failed to update settings', 'error');
+            saveButton.disabled = false;
+            saveButton.innerHTML = originalContent;
+        }
+    } catch (error) {
+        console.error('Privacy update error:', error);
+        showPrivacyToast('Failed to save privacy settings', 'error');
+        saveButton.disabled = false;
+        saveButton.innerHTML = originalContent;
+    }
+});
+
+// Toast system for privacy page
+function showPrivacyToast(message, type) {
+    if (!type) type = 'info';
+    
+    const container = document.getElementById('privacyToastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'privacy-toast privacy-toast-' + type;
+    
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    if (type === 'error') icon = '❌';
+    
+    toast.innerHTML = '<span class="privacy-toast-icon">' + icon + '</span><span class="privacy-toast-message">' + message + '</span>';
+    
+    container.appendChild(toast);
+    
+    // Show toast
+    setTimeout(function() {
+        toast.classList.add('privacy-toast-show');
+    }, 100);
+    
+    // Hide and remove toast
+    setTimeout(function() {
+        toast.classList.remove('privacy-toast-show');
+        setTimeout(function() {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, 4000);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle flash messages
+    const flashMessagesScript = document.getElementById('privacyFlashMessages');
+    if (flashMessagesScript) {
+        try {
+            const messages = JSON.parse(flashMessagesScript.textContent);
+            messages.forEach(function(msg) {
+                showPrivacyToast(msg.message, msg.category);
+            });
+        } catch (error) {
+            console.log('No flash messages to display');
+        }
+    }
+});
+</script>
+
+<style>
+.privacy-page {
+    min-height: 100vh;
+    background: #f7fafc;
+    padding: 20px;
+}
+
+.privacy-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Page Header */
+.privacy-header {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.privacy-header-content {
+    padding: 2rem;
+    text-align: center;
+}
+
+.privacy-page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 0.5rem 0;
+}
+
+.privacy-page-icon {
+    margin-right: 0.5rem;
+}
+
+.privacy-page-subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Form Section */
+.privacy-form-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.privacy-form {
+    padding: 2rem;
+}
+
+/* Setting Groups */
+.privacy-setting-group {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.privacy-setting-group:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.privacy-setting-header {
+    margin-bottom: 1.5rem;
+}
+
+.privacy-setting-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.privacy-setting-icon {
+    font-size: 1.3rem;
+}
+
+.privacy-setting-description {
+    color: #718096;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Radio Options */
+.privacy-setting-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.privacy-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.privacy-option:hover {
+    border-color: #cbd5e0;
+    background: #f8fafc;
+}
+
+.privacy-option input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #4299e1;
+}
+
+.privacy-option input[type="radio"]:checked + .privacy-option-content {
+    color: #2d3748;
+}
+
+.privacy-option:has(input[type="radio"]:checked) {
+    border-color: #4299e1;
+    background: #ebf8ff;
+}
+
+.privacy-option-content {
+    flex: 1;
+}
+
+.privacy-option-title {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.privacy-option-desc {
+    color: #718096;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Toggle Options */
+.privacy-setting-toggle .privacy-toggle {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.privacy-toggle:hover {
+    border-color: #cbd5e0;
+    background: #f8fafc;
+}
+
+.privacy-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.privacy-toggle-slider {
+    width: 50px;
+    height: 26px;
+    background: #cbd5e0;
+    border-radius: 13px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.privacy-toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.privacy-toggle input[type="checkbox"]:checked + .privacy-toggle-slider {
+    background: #4299e1;
+}
+
+.privacy-toggle input[type="checkbox"]:checked + .privacy-toggle-slider::before {
+    transform: translateX(24px);
+}
+
+.privacy-toggle:has(input[type="checkbox"]:checked) {
+    border-color: #4299e1;
+    background: #ebf8ff;
+}
+
+.privacy-toggle-content {
+    flex: 1;
+}
+
+.privacy-toggle-title {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.25rem;
+}
+
+.privacy-toggle-desc {
+    color: #718096;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Form Footer */
+.privacy-form-footer {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Buttons */
+.privacy-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 180px;
+}
+
+.privacy-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.privacy-btn-primary {
+    background: #4299e1;
+    color: white;
+}
+
+.privacy-btn-primary:hover:not(:disabled) {
+    background: #3182ce;
+    transform: translateY(-1px);
+}
+
+.privacy-btn-secondary {
+    background: #718096;
+    color: white;
+}
+
+.privacy-btn-secondary:hover:not(:disabled) {
+    background: #4a5568;
+}
+
+.privacy-btn-icon {
+    font-size: 1.1rem;
+}
+
+/* Privacy Tips */
+.privacy-tips-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.privacy-tips-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.privacy-tips-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.privacy-tips-icon {
+    font-size: 1.3rem;
+}
+
+.privacy-tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.privacy-tip {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.privacy-tip-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.privacy-tip-content {
+    flex: 1;
+}
+
+.privacy-tip-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 0.5rem 0;
+}
+
+.privacy-tip-text {
+    color: #718096;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Toast System */
+.privacy-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.privacy-toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    min-width: 300px;
+}
+
+.privacy-toast-show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.privacy-toast-success {
+    background: #48bb78;
+}
+
+.privacy-toast-error {
+    background: #f56565;
+}
+
+.privacy-toast-info {
+    background: #4299e1;
+}
+
+.privacy-toast-icon {
+    font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .privacy-page {
+        padding: 15px;
+    }
+    
+    .privacy-header-content {
+        padding: 1.5rem;
+    }
+    
+    .privacy-page-title {
+        font-size: 2rem;
+    }
+    
+    .privacy-form {
+        padding: 1.5rem;
+    }
+    
+    .privacy-setting-options {
+        gap: 0.5rem;
+    }
+    
+    .privacy-option {
+        padding: 0.75rem;
+    }
+    
+    .privacy-tips-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .privacy-form-footer {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .privacy-btn {
+        width: 100%;
+    }
+    
+    .privacy-toast-container {
+        left: 15px;
+        right: 15px;
+        top: 15px;
+    }
+    
+    .privacy-toast {
+        min-width: 0;
+    }
+}
+</style>
+{% endblock %}

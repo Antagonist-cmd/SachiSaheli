@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% block title %}Discover People - MindMentor{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="content-wrapper">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <span class="icon">🔍</span>
+                Discover People
+            </h1>
+            <p class="page-subtitle">Connect with others on their mental health journey</p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-container">
+                <form method="GET" class="search-form">
+                    <div class="search-input-group">
+                        <input type="text" 
+                               name="q" 
+                               value="{{ query or '' }}"
+                               placeholder="Search by username..." 
+                               class="search-input"
+                               autocomplete="off">
+                        <button type="submit" class="search-btn">
+                            <span class="btn-icon">🔍</span>
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            {% if query %}
+                {% if users %}
+                    <!-- Users Found -->
+                    <div class="results-header">
+                        <h2 class="results-title">Found {{ users|length }} user{{ 's' if users|length != 1 else '' }}</h2>
+                    </div>
+                    
+                    <div class="users-grid">
+                        {% for user in users %}
+                        <div class="user-card">
+                            <div class="user-card-header">
+                                <div class="user-avatar">
+                                    <img src="{{ user.avatar_url or '/static/images/default-avatar.png' }}" 
+                                         alt="{{ user.username }}'s avatar"
+                                         class="avatar-img">
+                                    {% if user.is_online %}
+                                    <div class="online-indicator"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="user-card-body">
+                                <h3 class="user-name">{{ user.full_name or user.username }}</h3>
+                                <p class="user-username">@{{ user.username }}</p>
+                                
+                                {% if user.bio %}
+                                <p class="user-bio">
+                                    {{ user.bio[:80] }}{% if user.bio|length > 80 %}...{% endif %}
+                                </p>
+                                {% endif %}
+                                
+                                {% if user.location %}
+                                <p class="user-location">
+                                    <span class="location-icon">📍</span>
+                                    {{ user.location }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="user-card-footer">
+                                <a href="/social-profile/{{ user.id }}" 
+                                   class="btn btn-primary btn-sm">
+                                    View Profile
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- No Results -->
+                    <div class="no-results">
+                        <div class="no-results-icon">🔍</div>
+                        <h3 class="no-results-title">No users found</h3>
+                        <p class="no-results-text">
+                            No users found for "<strong>{{ query }}</strong>"
+                        </p>
+                        <p class="no-results-suggestion">
+                            Try searching with different keywords or check the spelling
+                        </p>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Welcome State -->
+                <div class="welcome-state">
+                    <div class="welcome-icon">👥</div>
+                    <h3 class="welcome-title">Find Your Community</h3>
+                    <p class="welcome-text">
+                        Search for people who share similar experiences and connect with them
+                    </p>
+                    <div class="welcome-tips">
+                        <p class="tip-title">💡 Search Tips:</p>
+                        <ul class="tips-list">
+                            <li>Use partial usernames</li>
+                            <li>Search is case-insensitive</li>
+                            <li>Only public profiles will appear</li>
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add CSS for this page -->
+<style>
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.content-wrapper {
+    background: #f8fafc;
+    min-height: calc(100vh - 140px);
+}
+
+/* Page Header */
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem 0;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+}
+
+.page-title .icon {
+    margin-right: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+    margin: 0;
+}
+
+/* Search Section */
+.search-section {
+    margin-bottom: 2rem;
+}
+
+.search-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.search-form {
+    width: 100%;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 12px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.search-btn {
+    padding: 12px 24px;
+    background: #4299e1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-btn:hover {
+    background: #3182ce;
+}
+
+/* Results Section */
+.results-section {
+    margin-bottom: 2rem;
+}
+
+.results-header {
+    margin-bottom: 1.5rem;
+}
+
+.results-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    text-align: center;
+}
+
+/* Users Grid */
+.users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 0;
+}
+
+.user-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e2e8f0;
+}
+
+.user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.user-card-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.user-avatar {
+    position: relative;
+}
+
+.avatar-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e2e8f0;
+}
+
+.online-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    background: #48bb78;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+.user-card-body {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.user-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 0.25rem 0;
+}
+
+.user-username {
+    color: #718096;
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+}
+
+.user-bio {
+    color: #4a5568;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0 0 0.5rem 0;
+}
+
+.user-location {
+    color: #718096;
+    font-size: 0.85rem;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.user-card-footer {
+    text-align: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #4299e1;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3182ce;
+    transform: translateY(-1px);
+}
+
+.btn-sm {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+}
+
+/* No Results */
+.no-results {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.no-results-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.no-results-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 0.5rem 0;
+}
+
+.no-results-text {
+    color: #718096;
+    margin: 0 0 0.5rem 0;
+}
+
+.no-results-suggestion {
+    color: #a0aec0;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Welcome State */
+.welcome-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.welcome-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.welcome-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 1rem 0;
+}
+
+.welcome-text {
+    color: #718096;
+    font-size: 1.1rem;
+    margin: 0 0 2rem 0;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.welcome-tips {
+    background: #f7fafc;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.tip-title {
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 0.75rem 0;
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+
+.tips-list li {
+    color: #4a5568;
+    margin-bottom: 0.25rem;
+    position: relative;
+    padding-left: 1rem;
+}
+
+.tips-list li:before {
+    content: "•";
+    color: #4299e1;
+    position: absolute;
+    left: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 15px;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+    }
+    
+    .users-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .search-input-group {
+        flex-direction: column;
+    }
+    
+    .search-btn {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

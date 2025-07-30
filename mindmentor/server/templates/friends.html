@@ -1,0 +1,749 @@
+{% extends "base.html" %}
+{% block title %}Friends - MindMentor{% endblock %}
+
+{% block content %}
+<div class="friends-page">
+    <div class="friends-container">
+        
+        <!-- Page Header -->
+        <div class="friends-header">
+            <div class="friends-header-content">
+                <h1 class="friends-page-title">
+                    <span class="friends-page-icon">👥</span>
+                    Your Friends
+                </h1>
+                <p class="friends-page-subtitle">Connect and support each other on your mental health journey</p>
+                
+                <!-- Quick Actions -->
+                <div class="friends-quick-actions">
+                    <a href="/discover" class="friends-btn friends-btn-primary">
+                        <span class="friends-btn-icon">🔍</span>
+                        Discover People
+                    </a>
+                    <a href="/privacy-settings" class="friends-btn friends-btn-secondary">
+                        <span class="friends-btn-icon">🔒</span>
+                        Privacy Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Friends Stats -->
+        <div class="friends-stats">
+            <div class="friends-stat-card">
+                <div class="friends-stat-number">{{ friends|length }}</div>
+                <div class="friends-stat-label">Friends</div>
+            </div>
+            <div class="friends-stat-card">
+                <div class="friends-stat-number">{{ received_requests|length }}</div>
+                <div class="friends-stat-label">Pending Requests</div>
+            </div>
+            <div class="friends-stat-card">
+                <div class="friends-stat-number">{{ sent_requests|length }}</div>
+                <div class="friends-stat-label">Requests Sent</div>
+            </div>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="friends-content">
+            
+            <!-- Pending Friend Requests (Received) -->
+            {% if received_requests %}
+            <div class="friends-section">
+                <div class="friends-section-header">
+                    <h2 class="friends-section-title">
+                        <span class="friends-section-icon">📨</span>
+                        Friend Requests
+                        <span class="friends-badge">{{ received_requests|length }}</span>
+                    </h2>
+                </div>
+                
+                <div class="friends-cards-grid">
+                    {% for request in received_requests %}
+                    <div class="friends-card friends-request-card">
+                        <div class="friends-card-header">
+                            <div class="friends-card-avatar">
+                                <img src="{{ request.profile.avatar_url or '/static/images/default-avatar.png' }}" 
+                                     alt="{{ request.profile.username }}'s avatar"
+                                     class="friends-avatar-img">
+                            </div>
+                            <div class="friends-card-info">
+                                <h3 class="friends-card-name">{{ request.profile.full_name or request.profile.username }}</h3>
+                                <p class="friends-card-username">@{{ request.profile.username }}</p>
+                                <p class="friends-card-date">{{ request.created_at[:10] }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="friends-card-actions">
+                            <button onclick="respondToFriendRequest('{{ request.id }}', 'accepted')"
+                                    class="friends-btn friends-btn-accept friends-btn-sm">
+                                <span class="friends-btn-icon">✅</span>
+                                Accept
+                            </button>
+                            <button onclick="respondToFriendRequest('{{ request.id }}', 'declined')"
+                                    class="friends-btn friends-btn-decline friends-btn-sm">
+                                <span class="friends-btn-icon">❌</span>
+                                Decline
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Your Friends -->
+            {% if friends %}
+            <div class="friends-section">
+                <div class="friends-section-header">
+                    <h2 class="friends-section-title">
+                        <span class="friends-section-icon">🫂</span>
+                        Your Friends
+                        <span class="friends-badge">{{ friends|length }}</span>
+                    </h2>
+                </div>
+                
+                <div class="friends-cards-grid">
+                    {% for friend in friends %}
+                    <div class="friends-card friends-friend-card">
+                        <div class="friends-card-header">
+                            <div class="friends-card-avatar">
+                                <img src="{{ friend.avatar_url or '/static/images/default-avatar.png' }}" 
+                                     alt="{{ friend.username }}'s avatar"
+                                     class="friends-avatar-img">
+                                {% if friend.is_online %}
+                                <div class="friends-online-indicator"></div>
+                                {% endif %}
+                            </div>
+                            <div class="friends-card-info">
+                                <h3 class="friends-card-name">{{ friend.full_name or friend.username }}</h3>
+                                <p class="friends-card-username">@{{ friend.username }}</p>
+                                {% if friend.last_seen %}
+                                <p class="friends-card-status">Last seen {{ friend.last_seen[:10] }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="friends-card-actions">
+                            <a href="/social-profile/{{ friend.user_id }}" 
+                               class="friends-btn friends-btn-primary friends-btn-sm">
+                                <span class="friends-btn-icon">👀</span>
+                                View Profile
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Sent Requests -->
+            {% if sent_requests %}
+            <div class="friends-section">
+                <div class="friends-section-header">
+                    <h2 class="friends-section-title">
+                        <span class="friends-section-icon">📤</span>
+                        Requests Sent
+                        <span class="friends-badge">{{ sent_requests|length }}</span>
+                    </h2>
+                </div>
+                
+                <div class="friends-cards-grid">
+                    {% for request in sent_requests %}
+                    <div class="friends-card friends-sent-card">
+                        <div class="friends-card-header">
+                            <div class="friends-card-avatar">
+                                <img src="{{ request.profile.avatar_url or '/static/images/default-avatar.png' }}" 
+                                     alt="{{ request.profile.username }}'s avatar"
+                                     class="friends-avatar-img">
+                            </div>
+                            <div class="friends-card-info">
+                                <h3 class="friends-card-name">{{ request.profile.full_name or request.profile.username }}</h3>
+                                <p class="friends-card-username">@{{ request.profile.username }}</p>
+                                <p class="friends-card-date">Sent {{ request.created_at[:10] }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="friends-card-actions">
+                            <button class="friends-btn friends-btn-pending friends-btn-sm" disabled>
+                                <span class="friends-btn-icon">⏳</span>
+                                Pending
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Empty States -->
+            {% if not friends and not received_requests and not sent_requests %}
+            <div class="friends-empty-state">
+                <div class="friends-empty-icon">🌟</div>
+                <h3 class="friends-empty-title">Start Building Your Community</h3>
+                <p class="friends-empty-text">
+                    Connect with others who share similar mental health journeys. 
+                    Having a supportive community makes all the difference!
+                </p>
+                <div class="friends-empty-actions">
+                    <a href="/discover" class="friends-btn friends-btn-primary">
+                        <span class="friends-btn-icon">🔍</span>
+                        Discover People
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Toast Messages -->
+<div id="friendsToastContainer" class="friends-toast-container"></div>
+
+<!-- Flash Messages Data -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<script id="friendsFlashMessages" type="application/json">
+[
+{% for category, message in messages %}
+    {"category": "{{ category }}", "message": "{{ message|e }}"}{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+</script>
+{% endif %}
+{% endwith %}
+
+<script>
+// Friend request response function
+async function respondToFriendRequest(requestId, action) {
+    const buttons = document.querySelectorAll(`button[onclick*="${requestId}"]`);
+    const originalContent = {};
+    
+    // Disable buttons and store original content
+    buttons.forEach(function(btn) {
+        originalContent[btn.textContent.trim()] = btn.innerHTML;
+        btn.disabled = true;
+        if (action === 'accepted' && btn.textContent.includes('Accept')) {
+            btn.innerHTML = '<span class="friends-btn-icon">⏳</span> Accepting...';
+        } else if (action === 'declined' && btn.textContent.includes('Decline')) {
+            btn.innerHTML = '<span class="friends-btn-icon">⏳</span> Declining...';
+        }
+    });
+    
+    try {
+        const response = await fetch('/respond-friend-request/' + requestId + '/' + action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showFriendsToast(data.message, 'success');
+            // Reload page after short delay to show updated counts
+            setTimeout(function() {
+                location.reload();
+            }, 1500);
+        } else {
+            showFriendsToast(data.error || 'Failed to respond to request', 'error');
+            // Restore buttons
+            buttons.forEach(function(btn) {
+                btn.disabled = false;
+                const originalKey = Object.keys(originalContent).find(key => 
+                    btn.textContent.includes(key.split(' ')[0])
+                );
+                if (originalKey) {
+                    btn.innerHTML = originalContent[originalKey];
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Friend request response error:', error);
+        showFriendsToast('Failed to respond to request', 'error');
+        // Restore buttons
+        buttons.forEach(function(btn) {
+            btn.disabled = false;
+            const originalKey = Object.keys(originalContent).find(key => 
+                btn.textContent.includes(key.split(' ')[0])
+            );
+            if (originalKey) {
+                btn.innerHTML = originalContent[originalKey];
+            }
+        });
+    }
+}
+
+// Toast system for friends page
+function showFriendsToast(message, type) {
+    if (!type) type = 'info';
+    
+    const container = document.getElementById('friendsToastContainer');
+    const toast = document.createElement('div');
+    toast.className = 'friends-toast friends-toast-' + type;
+    
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    if (type === 'error') icon = '❌';
+    
+    toast.innerHTML = '<span class="friends-toast-icon">' + icon + '</span><span class="friends-toast-message">' + message + '</span>';
+    
+    container.appendChild(toast);
+    
+    // Show toast
+    setTimeout(function() {
+        toast.classList.add('friends-toast-show');
+    }, 100);
+    
+    // Hide and remove toast
+    setTimeout(function() {
+        toast.classList.remove('friends-toast-show');
+        setTimeout(function() {
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, 300);
+    }, 4000);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle flash messages
+    const flashMessagesScript = document.getElementById('friendsFlashMessages');
+    if (flashMessagesScript) {
+        try {
+            const messages = JSON.parse(flashMessagesScript.textContent);
+            messages.forEach(function(msg) {
+                showFriendsToast(msg.message, msg.category);
+            });
+        } catch (error) {
+            console.log('No flash messages to display');
+        }
+    }
+});
+</script>
+
+<style>
+.friends-page {
+    min-height: 100vh;
+    background: #f7fafc;
+    padding: 20px;
+}
+
+.friends-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Page Header */
+.friends-header {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.friends-header-content {
+    padding: 2rem;
+    text-align: center;
+}
+
+.friends-page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 0.5rem 0;
+}
+
+.friends-page-icon {
+    margin-right: 0.5rem;
+}
+
+.friends-page-subtitle {
+    font-size: 1.1rem;
+    color: #718096;
+    margin: 0 0 2rem 0;
+}
+
+.friends-quick-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Stats Section */
+.friends-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.friends-stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    border: 1px solid #e2e8f0;
+}
+
+.friends-stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #4299e1;
+    line-height: 1;
+}
+
+.friends-stat-label {
+    color: #718096;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Sections */
+.friends-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+}
+
+.friends-section-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.friends-section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.friends-section-icon {
+    font-size: 1.3rem;
+}
+
+.friends-badge {
+    background: #4299e1;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: auto;
+}
+
+/* Cards Grid */
+.friends-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.friends-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.friends-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.friends-request-card {
+    border-left: 4px solid #ed8936;
+}
+
+.friends-friend-card {
+    border-left: 4px solid #48bb78;
+}
+
+.friends-sent-card {
+    border-left: 4px solid #4299e1;
+}
+
+.friends-card-header {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.friends-card-avatar {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.friends-avatar-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e2e8f0;
+}
+
+.friends-online-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: #48bb78;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+.friends-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.friends-card-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friends-card-username {
+    color: #718096;
+    font-size: 0.9rem;
+    margin: 0 0 0.25rem 0;
+}
+
+.friends-card-date,
+.friends-card-status {
+    color: #a0aec0;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.friends-card-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.friends-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.friends-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.friends-btn-sm {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
+.friends-btn-primary {
+    background: #4299e1;
+    color: white;
+}
+
+.friends-btn-primary:hover:not(:disabled) {
+    background: #3182ce;
+    transform: translateY(-1px);
+}
+
+.friends-btn-secondary {
+    background: #718096;
+    color: white;
+}
+
+.friends-btn-secondary:hover:not(:disabled) {
+    background: #4a5568;
+}
+
+.friends-btn-accept {
+    background: #48bb78;
+    color: white;
+}
+
+.friends-btn-accept:hover:not(:disabled) {
+    background: #38a169;
+}
+
+.friends-btn-decline {
+    background: #f56565;
+    color: white;
+}
+
+.friends-btn-decline:hover:not(:disabled) {
+    background: #e53e3e;
+}
+
+.friends-btn-pending {
+    background: #ed8936;
+    color: white;
+}
+
+.friends-btn-icon {
+    font-size: 1rem;
+}
+
+/* Empty State */
+.friends-empty-state {
+    background: white;
+    border-radius: 16px;
+    padding: 4rem 2rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.friends-empty-icon {
+    font-size: 5rem;
+    margin-bottom: 1.5rem;
+}
+
+.friends-empty-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 1rem 0;
+}
+
+.friends-empty-text {
+    color: #718096;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin: 0 0 2rem 0;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.friends-empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* Toast System */
+.friends-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.friends-toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+    min-width: 300px;
+}
+
+.friends-toast-show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.friends-toast-success {
+    background: #48bb78;
+}
+
+.friends-toast-error {
+    background: #f56565;
+}
+
+.friends-toast-info {
+    background: #4299e1;
+}
+
+.friends-toast-icon {
+    font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .friends-page {
+        padding: 15px;
+    }
+    
+    .friends-header-content {
+        padding: 1.5rem;
+    }
+    
+    .friends-page-title {
+        font-size: 2rem;
+    }
+    
+    .friends-quick-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .friends-stats {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .friends-cards-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .friends-card-actions {
+        justify-content: center;
+    }
+    
+    .friends-btn {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .friends-toast-container {
+        left: 15px;
+        right: 15px;
+        top: 15px;
+    }
+    
+    .friends-toast {
+        min-width: 0;
+    }
+}
+</style>
+{% endblock %}
