@@ -334,12 +334,6 @@
     </main>
   </div>
 
-  <!-- Floating Journal (repositioned) -->
-  <form id="journalForm" class="journal-floating" method="POST" action="/api/mood/journal">
-    <textarea name="journal_entry" placeholder="📝 Write your thoughts..." required></textarea>
-    <button type="submit">Save Entry</button>
-  </form>
-
   <!-- All your existing script tags and data -->
   <script id="moodData" type="application/json">{{ moods | tojson }}</script>
   <script id="chartConfig" type="application/json">
