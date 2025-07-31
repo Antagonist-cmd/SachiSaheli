@@ -544,245 +544,134 @@
     </style>
 </head>
 <body>
-    <div class="bg-particles" id="particles"></div>
-    
-    <div class="mood-tracker-hero-bg">
-        <main class="mood-tracker-card">
-            <header class="header">
-                <h1>🧠 MindMentor Mood Tracker</h1>
-                <p class="subtitle">Track your mental wellbeing with intelligent insights</p>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-            </header>
-            <form id="moodCheckinForm" class="mood-form">
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <span class="section-icon">👤</span>
-                        Personal Information
-                    </h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="age">Your Age</label>
-                            <input type="number" id="age" name="age" placeholder="e.g. 28" min="13" max="100" required />
-                        </div>
-                        <div class="form-group">
-                            <label for="gender">Gender</label>
-                            <select id="gender" name="gender" required>
-                                <option value="" disabled selected>Select your gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                                <option value="prefer-not-to-say">Prefer not to say</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <span class="section-icon">📊</span>
-                        Rate Your Current State
-                    </h3>
-                    <div class="form-grid single-column">
-                        <div class="form-group mood-question">
-                            <label for="stress_level">
-                                <span class="emoji-mood">😰</span>
-                                How would you rate your current stress level?
-                            </label>
-                            <div class="rating-container">
-                                <input type="range" id="stress_level" name="stress_level" min="1" max="10" value="5" class="rating-slider" />
-                                <div class="rating-display">
-                                    <span class="rating-value" id="stress_level_value">5</span>
-                                </div>
-                                <div class="rating-labels">
-                                    <span>Very Low</span>
-                                    <span>Moderate</span>
-                                    <span>Very High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group mood-question">
-                            <label for="sleep_hours">
-                                <span class="emoji-mood">😴</span>
-                                How many hours did you sleep last night?
-                            </label>
-                            <input type="number" id="sleep_hours" name="sleep_hours" min="0" max="24" step="0.5" placeholder="e.g. 7.5" required />
-                        </div>
-                        <div class="form-group mood-question">
-                            <label for="social_interaction">
-                                <span class="emoji-mood">👥</span>
-                                How would you describe your social interaction today?
-                            </label>
-                            <div class="rating-container">
-                                <input type="range" id="social_interaction" name="sociability" min="0" max="10" value="5" class="rating-slider" />
-                                <div class="rating-display">
-                                    <span class="rating-value" id="social_interaction_value">5</span>
-                                </div>
-                                <div class="rating-labels">
-                                    <span>Isolated</span>
-                                    <span>Balanced</span>
-                                    <span>Very Social</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group mood-question">
-                            <label for="anxiety">
-                                <span class="emoji-mood">😟</span>
-                                How anxious or worried are you feeling right now?
-                            </label>
-                            <div class="rating-container">
-                                <input type="range" id="anxiety" name="anxiety" min="0" max="10" value="5" class="rating-slider" />
-                                <div class="rating-display">
-                                    <span class="rating-value" id="anxiety_value">5</span>
-                                </div>
-                                <div class="rating-labels">
-                                    <span>Very Calm</span>
-                                    <span>Moderate</span>
-                                    <span>Very Anxious</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group mood-question">
-                            <label for="emotional_stability">
-                                <span class="emoji-mood">🎭</span>
-                                How stable do your emotions feel today? (Emotional Stability)
-                            </label>
-                            <div class="rating-container">
-                                <input type="range" id="emotional_stability" name="emotional_stability" min="0" max="10" value="5" class="rating-slider" />
-                                <div class="rating-display">
-                                    <span class="rating-value" id="emotional_stability_value">5</span>
-                                </div>
-                                <div class="rating-labels">
-                                    <span>Unstable</span>
-                                    <span>Balanced</span>
-                                    <span>Very Stable</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group mood-question">
-                            <label for="self_esteem">
-                                <span class="emoji-mood">💪</span>
-                                How do you feel about yourself today? (Self-Esteem)
-                            </label>
-                            <div class="rating-container">
-                                <input type="range" id="self_esteem" name="self_esteem" min="0" max="10" value="5" class="rating-slider" />
-                                <div class="rating-display">
-                                    <span class="rating-value" id="self_esteem_value">5</span>
-                                </div>
-                                <div class="rating-labels">
-                                    <span>Very Low</span>
-                                    <span>Healthy</span>
-                                    <span>Very High</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group mood-question">
-                            <label for="motivation">
-                                <span class="emoji-mood">🚀</span>
-                                How motivated do you feel to tackle your goals?
-                            </label>
-                            <div class="rating-container">
-                                <input type="range" id="motivation" name="motivation" min="0" max="10" value="5" class="rating-slider" />
-                                <div class="rating-display">
-                                    <span class="rating-value" id="motivation_value">5</span>
-                                </div>
-                                <div class="rating-labels">
-                                    <span>No Drive</span>
-                                    <span>Moderate</span>
-                                    <span>Highly Driven</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group mood-question">
-                            <label for="eating_habits">
-                                <span class="emoji-mood">🍽️</span>
-                                How would you rate your eating habits recently?
-                            </label>
-                            <div class="rating-container">
-                                <input type="range" id="eating_habits" name="eating_habits" min="0" max="10" value="5" class="rating-slider" />
-                                <div class="rating-display">
-                                    <span class="rating-value" id="eating_habits_value">5</span>
-                                </div>
-                                <div class="rating-labels">
-                                    <span>Poor</span>
-                                    <span>Balanced</span>
-                                    <span>Excellent</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group mood-question">
-                            <label for="substance_abuse">
-                                <span class="emoji-mood">🚫</span>
-                                How often have you used substances recently?
-                            </label>
-                            <div class="rating-container">
-                                <input type="range" id="substance_abuse" name="substance_abuse" min="0" max="10" value="1" class="rating-slider" />
-                                <div class="rating-display">
-                                    <span class="rating-value" id="substance_abuse_value">1</span>
-                                </div>
-                                <div class="rating-labels">
-                                    <span>None</span>
-                                    <span>Occasional</span>
-                                    <span>Frequent</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-section">
-                    <h3 class="section-title">
-                        <span class="section-icon">✍️</span>
-                        Personal Reflection
-                    </h3>
-                    <div class="form-group full-width">
-                        <label for="journal_entry">Today's Reflection</label>
-                        <textarea id="journal_entry" name="journal_entry" rows="4" placeholder="How are you feeling today? What's on your mind? Share your thoughts..."></textarea>
-                    </div>
-                </div>
-                <button type="submit" class="btn" id="submitBtn">
-                    🔍 Analyze My Mood
-                </button>
-            </form>
-            <section id="results" class="results" aria-live="polite" hidden>
-                <h2 class="section-title">
-                    <span class="section-icon">🎯</span>
-                    Your Mood Analysis
-                </h2>
-                <div class="result-output">
-                    <h3>Your Predicted Mental State:</h3>
-                    <div id="mentalStatesWithInfo"></div>
-                </div>
-                <div class="suggestions" style="margin-top: 2rem;">
-                    <h3 class="section-title">
-                        <span class="section-icon">💡</span>
-                        Personalized Suggestions
-                    </h3>
-                    <div id="suggestionsList"></div>
-                </div>
-                <button id="saveBtn" class="btn btn-secondary" style="margin-top: 2rem;">
-                    💾 Save This Entry
-                </button>
-            </section>
-        </main>
-    </div>
+  <main class="container">
+    <header class="header">
+      <h1>🧠 MindMentor Mood Tracker</h1>
+      <p class="subtitle">Track your mental wellbeing daily</p>
+    </header>
 
-    <script id="tagMeanings" type="application/json">
-        {
-            "Depression": "A persistent feeling of sadness and loss of interest in activities",
-            "Anxiety": "Excessive worry, nervousness, or unease about future events",
-            "Stress": "Physical or mental tension resulting from demanding circumstances",
-            "Healthy": "A balanced state of mental and emotional wellbeing"
-        }
-    </script>
-    
-    <script id="tagSuggestions" type="application/json">
-        {
-            "Depression": ["Consider talking to a mental health professional", "Try engaging in light physical activity", "Maintain a regular sleep schedule"],
-            "Anxiety": ["Practice deep breathing exercises", "Try mindfulness meditation", "Limit caffeine intake"],
-            "Stress": ["Take regular breaks during work", "Practice relaxation techniques", "Consider time management strategies"],
-            "Healthy": ["Continue your current positive habits", "Consider sharing your strategies with others", "Maintain your balanced lifestyle"]
-        }
-    </script>
+    <form id="moodCheckinForm" class="mood-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="age">Your Age</label>
+          <input type="number" id="age" name="age" placeholder="e.g. 28" min="13" max="100" required />
+        </div>
+
+        <div class="form-group">
+          <label for="gender">Gender</label>
+          <select id="gender" name="gender" required>
+            <option value="" disabled selected>Select your gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+            <option value="prefer-not-to-say">Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Rate Your Current State (1-10)</h3>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="stress_level">Stress Level</label>
+          <div class="rating-container">
+            <input type="range" id="stress_level" name="stress_level" min="1" max="10" value="5" />
+            <span class="rating-value" id="stress_level_value">5</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="sleep_hours">Sleep Hours (Last Night)</label>
+          <input type="number" id="sleep_hours" name="sleep_hours" min="0" max="24" step="0.5" placeholder="e.g. 7.5" required />
+        </div>
+
+        <div class="form-group">
+          <label for="social_interaction">Social Interaction</label>
+          <div class="rating-container">
+            <input type="range" id="social_interaction" name="sociability" min="0" max="10" value="5" />
+            <span class="rating-value" id="social_interaction_value">5</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="anxiety">Anxiety Level</label>
+          <div class="rating-container">
+            <input type="range" id="anxiety" name="anxiety" min="0" max="10" value="5" />
+            <span class="rating-value" id="anxiety_value">5</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="emotional_stability">Emotional Stability</label>
+          <div class="rating-container">
+            <input type="range" id="emotional_stability" name="emotional_stability" min="0" max="10" value="5" />
+            <span class="rating-value" id="emotional_stability_value">5</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="self_esteem">Self-Esteem</label>
+          <div class="rating-container">
+            <input type="range" id="self_esteem" name="self_esteem" min="0" max="10" value="5" />
+            <span class="rating-value" id="self_esteem_value">5</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="motivation">Motivation Level</label>
+          <div class="rating-container">
+            <input type="range" id="motivation" name="motivation" min="0" max="10" value="5" />
+            <span class="rating-value" id="motivation_value">5</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="eating_habits">Eating Habits</label>
+          <div class="rating-container">
+            <input type="range" id="eating_habits" name="eating_habits" min="0" max="10" value="5" />
+            <span class="rating-value" id="eating_habits_value">5</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+  <label for="substance_abuse">Substance Use (0–1)</label>
+  <div class="rating-container">
+    <input type="range" id="substance_abuse" name="substance_abuse" min="0" max="1" value="1" />
+    <span class="rating-value" id="substance_abuse_value">1</span>
+  </div>
+</div>
+
+
+      <div class="form-group">
+        <label for="journal_entry">Today's Reflection</label>
+        <textarea id="journal_entry" name="journal_entry" rows="4" placeholder="How are you feeling today? What's on your mind?"></textarea>
+      </div>
+
+      <button type="submit" class="btn">Analyze My Mood</button>
+    </form>
+
+    <section id="results" class="results" aria-live="polite" hidden>
+      <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Your Mood Analysis</h2>
+      <div class="result-output">
+      <h3>Your Predicted Mental State:</h3>
+      <div id="mentalState" class="tag-list"></div>
+      </div>
+      <div class="form-group">
+      <label for="gratitude">One thing you're grateful for today</label>
+      <textarea id="gratitude" name="gratitude" rows="2" placeholder="e.g., A chat with a friend, good food, sunny weather..."></textarea>
+      </div>
+       <div class="suggestions" style="margin-top: 2rem;">
+       <h3>Personalized Suggestions</h3>
+       <div id="suggestionsList"></div>
+       </div>
+
+
+
+      <button id="saveBtn" class="btn btn-secondary" style="margin-top: 2rem;">
+        💾 Save This Entry
+      </button>
+    </section>
+  </main>
 
     <script>
         // Create animated background particles
@@ -842,187 +731,55 @@
             }
         });
 
-        // Parse meanings & suggestions JSON from backend
-        const tagMeanings = JSON.parse(document.getElementById('tagMeanings').textContent);
-        const tagSuggestions = JSON.parse(document.getElementById('tagSuggestions').textContent);
+  // Analyze My Mood button functionality
+  document.getElementById('moodCheckinForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-        // Form submission handler
-        document.getElementById('moodCheckinForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const form = e.target;
-            const submitBtn = document.getElementById('submitBtn');
-            
-            // Add loading state
-            submitBtn.classList.add('loading');
-            submitBtn.textContent = 'Analyzing...';
-            
-            const formData = {
-                age: form.age.value,
-                gender: form.gender.value,
-                stress_level: form.stress_level.value,
-                sleep_hours: form.sleep_hours.value,
-                sociability: form.social_interaction.value,
-                anxiety: form.anxiety?.value || 5,
-                emotional_stability: form.emotional_stability?.value || 5,
-                self_esteem: form.self_esteem?.value || 5,
-                motivation: form.motivation.value,
-                eating_habits: form.eating_habits?.value || 5,
-                substance_abuse: form.substance_abuse?.value || 5,
-                journal_entry: form.journal_entry.value
-            };
+    const form = e.target;
+    const formData = {
+      age: form.age.value,
+      gender: form.gender.value,
+      stress_level: form.stress_level.value,
+      sleep_hours: form.sleep_hours.value,
+      sociability: form.social_interaction.value,
+      anxiety: form.anxiety?.value || 5,
+      emotional_stability: form.emotional_stability?.value || 5,
+      self_esteem: form.self_esteem?.value || 5,
+      motivation: form.motivation.value,
+      eating_habits: form.eating_habits?.value || 5,
+      substance_abuse: form.substance_abuse?.value || 5,
+      journal_entry: form.journal_entry.value,
+    };
 
-            try {
-                // Simulate API call for demo purposes
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Mock response - in real app, this would come from your API
-                const mockTags = ['Stress', 'Anxiety'];
-                const result = { predicted_tags: mockTags };
+    try {
+      const res = await fetch('/api/mood/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
 
-                // Clear previous content
-                const statesWithInfo = document.getElementById('mentalStatesWithInfo');
-                statesWithInfo.innerHTML = "";
-                const suggestionsList = document.getElementById('suggestionsList');
-                suggestionsList.innerHTML = "";
+      const result = await res.json();
 
-                // Display each predicted tag with its meaning
-                result.predicted_tags.forEach(tag => {
-                    const tagDiv = document.createElement("div");
-                    tagDiv.className = "diagnosis-explainer";
-                    tagDiv.style.marginBottom = "22px";
-                    tagDiv.innerHTML = `
-                        <span class="tag" style="font-size:1.1em;">${tag}</span>
-                        <div style="margin:6px 0 0 0; color:#6366f1; font-weight:500;">
-                            ${tagMeanings[tag] ? tagMeanings[tag] : "No description available for this state."}
-                        </div>
-                    `;
-                    statesWithInfo.appendChild(tagDiv);
-                });
+      if (res.ok) {
+        const tagsContainer = document.getElementById('mentalState');
+        tagsContainer.innerHTML = "";
 
-                // Build a unified list of all suggestions
-                let allTips = [];
-                result.predicted_tags.forEach(tag => {
-                    if (tagSuggestions[tag]) {
-                        allTips = allTips.concat(tagSuggestions[tag]);
-                    }
-                });
-
-                if (allTips.length > 0) {
-                    const ul = document.createElement("ul");
-                    [...new Set(allTips)].forEach(tip => {
-                        const li = document.createElement("li");
-                        li.textContent = tip;
-                        ul.appendChild(li);
-                    });
-                    suggestionsList.appendChild(ul);
-                } else {
-                    suggestionsList.innerHTML = "<span style='color:#6b7280;'>No suggestions available for these states. Try checking in again soon!</span>";
-                }
-
-                // Show results
-                document.getElementById("results").hidden = false;
-                document.getElementById("results").scrollIntoView({ behavior: 'smooth' });
-
-            } catch (err) {
-                console.error("💥 Error:", err);
-                alert("Something went wrong! Please try again.");
-            } finally {
-                // Remove loading state
-                submitBtn.classList.remove('loading');
-                submitBtn.textContent = '🔍 Analyze My Mood';
-            }
+        result.predicted_tags.forEach(tag => {
+          const span = document.createElement("span");
+          span.className = "tag";
+          span.textContent = tag;
+          tagsContainer.appendChild(span);
         });
 
-        // Save button functionality
-        document.getElementById('saveBtn').addEventListener('click', function() {
-            const saveBtn = this;
-            saveBtn.classList.add('loading');
-            saveBtn.textContent = 'Saving...';
-            
-            // Simulate save operation
-            setTimeout(() => {
-                saveBtn.classList.remove('loading');
-                saveBtn.textContent = '✅ Saved!';
-                setTimeout(() => {
-                    saveBtn.textContent = '💾 Save This Entry';
-                }, 2000);
-            }, 1500);
-        });
+        // Show results
+        document.getElementById("results").hidden = false;
 
-        // Add some interactive effects
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add hover effects to form groups
-            const moodQuestions = document.querySelectorAll('.form-group.mood-question');
-            moodQuestions.forEach(question => {
-                question.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-3px)';
-                });
-                question.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-
-            // Add focus effects to inputs
-            const inputs = document.querySelectorAll('input, select, textarea');
-            inputs.forEach(input => {
-                input.addEventListener('focus', function() {
-                    this.parentElement.style.transform = 'scale(1.02)';
-                });
-                input.addEventListener('blur', function() {
-                    this.parentElement.style.transform = 'scale(1)';
-                });
-            });
-        });
-
-        // Add keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' && e.ctrlKey) {
-                document.getElementById('moodCheckinForm').requestSubmit();
-            }
-        });
-
-        // Add form validation feedback
-        function validateForm() {
-            const form = document.getElementById('moodCheckinForm');
-            const requiredInputs = form.querySelectorAll('input[required], select[required]');
-            let isValid = true;
-            
-            requiredInputs.forEach(input => {
-                if (!input.value.trim()) {
-                    input.style.borderColor = 'var(--error)';
-                    input.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
-                    isValid = false;
-                } else {
-                    input.style.borderColor = 'var(--success)';
-                    input.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.1)';
-                }
-            });
-            
-            return isValid;
-        }
-
-        // Add real-time validation
-        document.addEventListener('DOMContentLoaded', function() {
-            const inputs = document.querySelectorAll('input[required], select[required]');
-            inputs.forEach(input => {
-                input.addEventListener('blur', function() {
-                    if (this.value.trim()) {
-                        this.style.borderColor = 'var(--success)';
-                        this.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.1)';
-                    } else {
-                        this.style.borderColor = 'var(--error)';
-                        this.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.1)';
-                    }
-                });
-                
-                input.addEventListener('input', function() {
-                    if (this.style.borderColor === 'rgb(239, 68, 68)' && this.value.trim()) {
-                        this.style.borderColor = 'var(--success)';
-                        this.style.boxShadow = '0 0 0 4px rgba(16, 185, 129, 0.1)';
-                    }
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+      } else {
+        alert(result.error || "Something went wrong!");
+      }
+    } catch (err) {
+      console.error("💥 Error:", err);
+      alert("Something went wrong!");
+    }
+  });
+</script>
