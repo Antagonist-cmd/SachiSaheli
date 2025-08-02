@@ -5,6 +5,372 @@
   <title>Dashboard | MindMentor</title>
   <link rel="stylesheet" href="/static/css/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Friend Request Notification Modal */
+    .friend-notification-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: modalFadeIn 0.3s ease-out;
+    }
+    
+    .notification-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+    
+    .notification-popup {
+        position: relative;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        max-width: 450px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: hidden;
+        transform: translateY(-20px);
+        animation: popupSlideIn 0.3s ease-out 0.1s forwards;
+    }
+    
+    .notification-header {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .notification-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .notification-icon {
+        font-size: 1.5rem;
+    }
+    
+    .notification-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s;
+    }
+    
+    .notification-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .notification-content {
+        padding: 2rem;
+    }
+    
+    .notification-message {
+        font-size: 1.1rem;
+        color: #4a5568;
+        text-align: center;
+        margin: 0 0 1.5rem 0;
+        line-height: 1.6;
+    }
+    
+    .friend-requests-preview {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Enhanced Friend Request Item with Quick Actions */
+    .friend-request-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+    
+    .friend-request-item:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e0;
+        transform: translateY(-1px);
+    }
+    
+    .request-avatar img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .request-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .request-name {
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .request-username {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+    
+    /* NEW: Quick Action Buttons */
+    .request-quick-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    .quick-action-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    
+    .quick-action-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    .quick-action-btn:active {
+        transform: translateY(0) scale(0.95);
+    }
+    
+    .quick-action-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .quick-accept-btn {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+    }
+    
+    .quick-accept-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #059669, #047857);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .quick-decline-btn {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+    
+    .quick-decline-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+    
+    .action-icon {
+        font-size: 1rem;
+    }
+    
+    /* Enhanced More Requests Section */
+    .more-requests {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: center;
+        padding: 1rem;
+        background: #f1f5f9;
+        border-radius: 12px;
+        border: 2px dashed #cbd5e0;
+    }
+    
+    .more-count {
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    
+    .view-all-link {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+    }
+    
+    .view-all-link:hover {
+        color: #5a67d8;
+    }
+    
+    .notification-actions {
+        padding: 1.5rem;
+        background: #f8fafc;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .notification-btn {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-width: 120px;
+    }
+    
+    .notification-btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .notification-btn-primary:hover {
+        background: linear-gradient(135deg, #5a67d8, #6b46c1);
+        transform: translateY(-2px);
+    }
+    
+    .notification-btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .notification-btn-secondary:hover {
+        background: #cbd5e0;
+        transform: translateY(-1px);
+    }
+    
+    .notification-btn-tertiary {
+        background: #f8fafc;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .notification-btn-tertiary:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e0;
+        transform: translateY(-1px);
+    }
+    
+    /* Loading state for buttons */
+    .quick-action-btn.loading {
+        background: #9ca3af !important;
+        animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+    
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes popupSlideIn {
+        from { 
+            transform: translateY(-30px); 
+            opacity: 0; 
+        }
+        to { 
+            transform: translateY(0); 
+            opacity: 1; 
+        }
+    }
+    
+    @keyframes modalFadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+    
+    @keyframes slideOutRight {
+        from { 
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to { 
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .notification-popup {
+            margin: 1rem;
+            max-width: none;
+            width: calc(100% - 2rem);
+        }
+        
+        .notification-actions {
+            flex-direction: column;
+        }
+        
+        .notification-btn {
+            flex: none;
+            width: 100%;
+        }
+        
+        .friend-request-item {
+            gap: 0.75rem;
+        }
+        
+        .quick-action-btn {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+        
+        .request-quick-actions {
+            gap: 0.35rem;
+        }
+    }
+</style>
 </head>
 <body>
   <!-- Sidebar Overlay for Mobile -->
@@ -44,11 +410,9 @@
           <span class="nav-text">Profile</span>
         </a>
         <!-- In your base template or navbar -->
-<a href="/discover" class="nav-link">🔍 Discover</a>
-<a href="/friends" class="nav-link">👥 Friends</a>
-<a href="/privacy-settings" class="nav-link">🔒 Privacy</a>
-
-
+        <a href="/discover" class="nav-link">🔍 Discover</a>
+        <a href="/friends" class="nav-link">👥 Friends</a>
+        <a href="/privacy-settings" class="nav-link">🔒 Privacy</a>
         
         <div class="nav-divider"></div>
         
@@ -62,7 +426,7 @@
         </a>
       </nav>
     </aside>
-
+    
     <!-- Main Content Area -->
     <main class="main-content" id="mainContent">
       <!-- Enhanced Top Header with Sidebar Toggle -->
@@ -75,265 +439,339 @@
           <span class="user-greeting">{{ greeting }}, {{ username }}! 👋</span>
         </div>
       </header>
-
+      
       <!-- Dashboard Content -->
-      <div class="dashboard-content">
+      <div class="dashboard-page">
         
-        <!-- Welcome Header Card -->
-        <div class="welcome-card dashboard-card">
-          {% if quote %}
-          <blockquote class="quote-display">"{{ quote }}"</blockquote>
-          {% endif %}
-          
-          <div class="stats-row">
-            <div class="stat-item">
-              {% if streak > 0 %}
-              <h3>{{ streak }}</h3>
-              <span>🔥 Day Streak</span>
-              {% else %}
-              <h3>0</h3>
-              <span>🚀 Start Today</span>
-              {% endif %}
-            </div>
-            <div class="stat-item">
-              <h3>{{ moods|length }}</h3>
-              <span>📊 Check-ins</span>
-            </div>
-            <div class="stat-item">
-              <h3>{{ mood_summary|length }}</h3>
-              <span>🎯 Insights</span>
-            </div>
-          </div>
+        <!-- Friend Request Notification Modal -->
+        {% if show_friend_notification and friend_requests %}
+        <div id="friendRequestModal" class="friend-notification-modal">
+    <div class="notification-overlay" onclick="closeFriendNotification()"></div>
+    <div class="notification-popup">
+        <div class="notification-header">
+            <h3 class="notification-title">
+                <span class="notification-icon">👥</span>
+                New Friend Request{{ 's' if friend_requests|length > 1 else '' }}!
+            </h3>
+            <button class="notification-close" onclick="closeFriendNotification()">×</button>
         </div>
-
-        <!-- Reflective Insights Card -->
-        {% if reflective_insights %}
-        <div class="insights-card dashboard-card">
-          <h3>🧠 Reflective Insights</h3>
-          <div class="insights-grid">
-            {% for insight in reflective_insights %}
-              <div class="insight-item">{{ insight }}</div>
-            {% endfor %}
-          </div>
-        </div>
-        {% endif %}
-
-        <!-- Last Mood Check-in Card -->
-        {% if last_mood %}
-        <div class="last-mood-card dashboard-card">
-          <h3>🧠 Recent Check-in</h3>
-          <div class="mood-details">
-            <div class="mood-state">
-              <span class="mood-badge">{{ last_mood.mental_state or "N/A" }}</span>
-            </div>
-            {% if last_mood.journal_entry %}
-            <div class="journal-preview">
-              <h4>📝 Journal Entry:</h4>
-              <blockquote>{{ last_mood.journal_entry }}</blockquote>
-            </div>
-            {% endif %}
+        
+        <div class="notification-content">
+            <p class="notification-message">
+                {% if friend_requests|length == 1 %}
+                    Someone wants to connect with you on your mental health journey!
+                {% else %}
+                    {{ friend_requests|length }} people want to connect with you!
+                {% endif %}
+            </p>
             
-            <!-- Fixed Suggestions Section -->
-            {% if last_mood.suggestions and last_mood.suggestions != last_mood.diagnosis_tags and last_mood.suggestions|length > 0 %}
-            <div class="suggestions">
-              <h4>💡 Suggestions:</h4>
-              <ul>
-                {% for tip in last_mood.suggestions %}
-                <li>{{ tip }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-            {% elif last_mood.diagnosis_tags and last_mood.diagnosis_tags|length > 0 %}
-            <div class="suggestions">
-              <h4>🏷️ Identified States:</h4>
-              <div class="diagnosis-tags">
-                {% for tag in last_mood.diagnosis_tags %}
-                  <span class="diagnosis-tag">{{ tag }}</span>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-        {% else %}
-        <div class="empty-state-card dashboard-card">
-          <h3>📝 Ready to Start?</h3>
-          <p>No mood check-ins yet. Let's create your first one!</p>
-          <a href="/mood-tracker" class="cta-button">Add First Check-in</a>
-        </div>
-        {% endif %}
-
-        <!-- Charts Grid -->
-        <div class="charts-grid">
-          <!-- Enhanced Mood Trend Chart -->
-          <div class="mood-chart-section dashboard-card">
-            <div class="chart-header">
-              <h3>📈 Mood Trend Analysis</h3>
-              <div class="chart-controls">
-                <select id="timeRangeSelector" class="time-selector">
-                  <option value="7">Last 7 Days</option>
-                  <option value="30" selected>Last 30 Days</option>
-                  <option value="all">All Time</option>
-                </select>
-                <button id="refreshChart" class="refresh-btn">🔄</button>
-              </div>
-            </div>
-            
-            <div class="chart-container">
-              <canvas id="moodChart"></canvas>
-              <div id="chartLoading" class="loading-state" style="display: none;">
-                <div class="spinner"></div>
-                <p>Loading mood data...</p>
-              </div>
-              <div id="emptyChart" class="empty-state" style="display: none;">
-                <p>📊 No mood data available for the selected period</p>
-                <small>Start tracking your mood to see trends!</small>
-              </div>
-            </div>
-            
-            <div id="chartInfo" class="chart-info">
-              <span id="dataPointCount">0 data points</span>
-              <span id="dateRange"></span>
-            </div>
-          </div>
-
-          <!-- Weekly Trends Chart -->
-          <div class="weekly-trends-card dashboard-card">
-            <h3>📊 Weekly Mental State Trends</h3>
-            <div class="chart-wrapper">
-              <canvas id="moodTrendChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Weekly Pattern & Summary Grid -->
-        <div class="info-grid">
-          <!-- Weekly Pattern -->
-          {% if weekly_mood_trend %}
-          <div class="weekly-pattern-card dashboard-card">
-            <h3>📅 Weekly Mood Pattern</h3>
-            <div class="pattern-grid">
-              {% for day, mood in weekly_mood_trend.items() %}
-                <div class="pattern-day-item">
-                  <div class="day-label">{{ day }}</div>
-                  <div class="mood-indicator {{ mood|lower|replace(' ', '-') }}">
-                    <span class="mood-text">{{ mood }}</span>
-                  </div>
+            <div class="friend-requests-preview">
+                {% for request in friend_requests[:5] %}
+                <div class="friend-request-item">
+                    <div class="request-avatar">
+                        <img src="{{ request.requester.avatar_url or '/static/images/default-avatar.png' }}" 
+                             alt="{{ request.requester.username }}'s avatar"
+                             onerror="this.src='/static/images/default-avatar.png'; this.onerror=null;">
+                    </div>
+                    <div class="request-info">
+                        <div class="request-name">{{ request.requester.full_name or request.requester.username }}</div>
+                        <div class="request-username">@{{ request.requester.username }}</div>
+                    </div>
+                    <!-- 🔧 NEW: Quick Accept/Decline Actions -->
+                    <div class="request-quick-actions">
+                        <button onclick="quickRespondToRequest('{{ request.id }}', 'accepted', this)" 
+                                class="quick-action-btn quick-accept-btn"
+                                title="Accept friend request">
+                            <span class="action-icon">✅</span>
+                        </button>
+                        <button onclick="quickRespondToRequest('{{ request.id }}', 'declined', this)" 
+                                class="quick-action-btn quick-decline-btn"
+                                title="Decline friend request">
+                            <span class="action-icon">❌</span>
+                        </button>
+                    </div>
                 </div>
+                {% endfor %}
+                
+                {% if friend_requests|length > 5 %}
+                <div class="more-requests">
+                    <span class="more-count">+{{ friend_requests|length - 5 }} more requests</span>
+                    <a href="/friends" class="view-all-link">View all →</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="notification-actions">
+            <a href="/friends" class="notification-btn notification-btn-secondary">
+                <span class="btn-icon">👀</span>
+                View All Requests
+            </a>
+            <button onclick="closeFriendNotification()" class="notification-btn notification-btn-tertiary">
+                <span class="btn-icon">⏰</span>
+                Later
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+        
+        <div class="dashboard-content">
+          <!-- Welcome Header Card -->
+          <div class="welcome-card dashboard-card">
+            {% if quote %}
+            <blockquote class="quote-display">"{{ quote }}"</blockquote>
+            {% endif %}
+            
+            <div class="stats-row">
+              <div class="stat-item">
+                {% if streak > 0 %}
+                <h3>{{ streak }}</h3>
+                <span>🔥 Day Streak</span>
+                {% else %}
+                <h3>0</h3>
+                <span>🚀 Start Today</span>
+                {% endif %}
+              </div>
+              <div class="stat-item">
+                <h3>{{ moods|length }}</h3>
+                <span>📊 Check-ins</span>
+              </div>
+              <div class="stat-item">
+                <h3>{{ mood_summary|length }}</h3>
+                <span>🎯 Insights</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Reflective Insights Card -->
+          {% if reflective_insights %}
+          <div class="insights-card dashboard-card">
+            <h3>🧠 Reflective Insights</h3>
+            <div class="insights-grid">
+              {% for insight in reflective_insights %}
+                <div class="insight-item">{{ insight }}</div>
               {% endfor %}
             </div>
           </div>
           {% endif %}
-
-          <!-- Mood Summary -->
-          {% if mood_summary %}
-          <div class="mood-summary-card dashboard-card">
-            <div class="summary-header">
-              <h3>📊 Mood Summary</h3>
-              <button id="toggle-summary" class="toggle-btn">
-                <span id="toggle-icon">▼</span>
-              </button>
+          
+          <!-- Last Mood Check-in Card -->
+          {% if last_mood %}
+          <div class="last-mood-card dashboard-card">
+            <h3>🧠 Recent Check-in</h3>
+            <div class="mood-details">
+              <div class="mood-state">
+                <span class="mood-badge">{{ last_mood.mental_state or "N/A" }}</span>
+              </div>
+              {% if last_mood.journal_entry %}
+              <div class="journal-preview">
+                <h4>📝 Journal Entry:</h4>
+                <blockquote>{{ last_mood.journal_entry }}</blockquote>
+              </div>
+              {% endif %}
+              
+              <!-- Fixed Suggestions Section -->
+              {% if last_mood.suggestions and last_mood.suggestions != last_mood.diagnosis_tags and last_mood.suggestions|length > 0 %}
+              <div class="suggestions">
+                <h4>💡 Suggestions:</h4>
+                <ul>
+                  {% for tip in last_mood.suggestions %}
+                  <li>{{ tip }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% elif last_mood.diagnosis_tags and last_mood.diagnosis_tags|length > 0 %}
+              <div class="suggestions">
+                <h4>🏷️ Identified States:</h4>
+                <div class="diagnosis-tags">
+                  {% for tag in last_mood.diagnosis_tags %}
+                    <span class="diagnosis-tag">{{ tag }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
             </div>
-            <div id="summary-content" class="summary-content">
-              <div class="summary-list">
-                {% for item in mood_summary %}
-                  <div class="summary-item">
-                    <span class="mood-name">{{ item.mood }}</span>
-                    <span class="mood-count">{{ item.count }} check-in{{ 's' if item.count > 1 else '' }}</span>
+          </div>
+          {% else %}
+          <div class="empty-state-card dashboard-card">
+            <h3>📝 Ready to Start?</h3>
+            <p>No mood check-ins yet. Let's create your first one!</p>
+            <a href="/mood-tracker" class="cta-button">Add First Check-in</a>
+          </div>
+          {% endif %}
+          
+          <!-- Charts Grid -->
+          <div class="charts-grid">
+            <!-- Enhanced Mood Trend Chart -->
+            <div class="mood-chart-section dashboard-card">
+              <div class="chart-header">
+                <h3>📈 Mood Trend Analysis</h3>
+                <div class="chart-controls">
+                  <select id="timeRangeSelector" class="time-selector">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="all">All Time</option>
+                  </select>
+                  <button id="refreshChart" class="refresh-btn">🔄</button>
+                </div>
+              </div>
+              
+              <div class="chart-container">
+                <canvas id="moodChart"></canvas>
+                <div id="chartLoading" class="loading-state" style="display: none;">
+                  <div class="spinner"></div>
+                  <p>Loading mood data...</p>
+                </div>
+                <div id="emptyChart" class="empty-state" style="display: none;">
+                  <p>📊 No mood data available for the selected period</p>
+                  <small>Start tracking your mood to see trends!</small>
+                </div>
+              </div>
+              
+              <div id="chartInfo" class="chart-info">
+                <span id="dataPointCount">0 data points</span>
+                <span id="dateRange"></span>
+              </div>
+            </div>
+            
+            <!-- Weekly Trends Chart -->
+            <div class="weekly-trends-card dashboard-card">
+              <h3>📊 Weekly Mental State Trends</h3>
+              <div class="chart-wrapper">
+                <canvas id="moodTrendChart"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Weekly Pattern & Summary Grid -->
+          <div class="info-grid">
+            <!-- Weekly Pattern -->
+            {% if weekly_mood_trend %}
+            <div class="weekly-pattern-card dashboard-card">
+              <h3>📅 Weekly Mood Pattern</h3>
+              <div class="pattern-grid">
+                {% for day, mood in weekly_mood_trend.items() %}
+                  <div class="pattern-day-item">
+                    <div class="day-label">{{ day }}</div>
+                    <div class="mood-indicator {{ mood|lower|replace(' ', '-') }}">
+                      <span class="mood-text">{{ mood }}</span>
+                    </div>
                   </div>
                 {% endfor %}
               </div>
             </div>
+            {% endif %}
+            
+            <!-- Mood Summary -->
+            {% if mood_summary %}
+            <div class="mood-summary-card dashboard-card">
+              <div class="summary-header">
+                <h3>📊 Mood Summary</h3>
+                <button id="toggle-summary" class="toggle-btn">
+                  <span id="toggle-icon">▼</span>
+                </button>
+              </div>
+              <div id="summary-content" class="summary-content">
+                <div class="summary-list">
+                  {% for item in mood_summary %}
+                    <div class="summary-item">
+                      <span class="mood-name">{{ item.mood }}</span>
+                      <span class="mood-count">{{ item.count }} check-in{{ 's' if item.count > 1 else '' }}</span>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% endif %}
           </div>
-          {% endif %}
-        </div>
-
-        <!-- Mood History & Recent Journals Grid -->
-        <div class="history-grid">
-          <!-- Enhanced Mood History with Cards -->
-          <div class="mood-history-card dashboard-card">
-            <div id="moodHistoryBanner" class="history-banner">
-              <h3>📅 Your Mood History</h3>
-              <span class="expand-text">(click to expand)</span>
+          
+          <!-- Mood History & Recent Journals Grid -->
+          <div class="history-grid">
+            <!-- Enhanced Mood History with Cards -->
+            <div class="mood-history-card dashboard-card">
+              <div id="moodHistoryBanner" class="history-banner">
+                <h3>📅 Your Mood History</h3>
+                <span class="expand-text">(click to expand)</span>
+              </div>
+              
+              <div id="moodHistoryContent" class="history-content">
+                {% if moods %}
+                  <div class="mood-cards-grid">
+                    {% for mood in moods %}
+                    <div class="mood-history-card-item" data-id="{{ mood.id }}">
+                      <div class="mood-card-header">
+                        <div class="mood-info">
+                          <span class="mood-state-badge {{ mood.mental_state|lower|replace(' ', '-') }}">
+                            {{ mood.mental_state }}
+                          </span>
+                          <span class="mood-timestamp">
+                            {% if mood.timestamp_display %} 
+                              {{ mood.timestamp_display }} 
+                            {% else %}
+                              {{ mood.timestamp.strftime('%b %d, %Y %I:%M %p') if mood.timestamp and not mood.timestamp is string else mood.timestamp }}
+                            {% endif %}
+                          </span>
+                        </div>
+                        <button class="delete-mood-btn" data-id="{{ mood.id }}">🗑️</button>
+                      </div>
+                      
+                      {% if mood.journal_entry %}
+                      <div class="mood-journal-entry">
+                        <h5>📝 Journal Entry</h5>
+                        <p>{{ mood.journal_entry }}</p>
+                      </div>
+                      {% endif %}
+                      
+                      {% if mood.diagnosis_tags %}
+                      <div class="mood-tags">
+                        {% for tag in mood.diagnosis_tags %}
+                          <span class="mood-tag">{{ tag }}</span>
+                        {% endfor %}
+                      </div>
+                      {% endif %}
+                    </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="empty-history">
+                    <p>No mood history yet.</p>
+                    <a href="/mood-tracker" class="add-mood-link">Start tracking</a>
+                  </div>
+                {% endif %}
+              </div>
             </div>
             
-            <div id="moodHistoryContent" class="history-content">
-              {% if moods %}
-                <div class="mood-cards-grid">
-                  {% for mood in moods %}
-                  <div class="mood-history-card-item" data-id="{{ mood.id }}">
-                    <div class="mood-card-header">
-                      <div class="mood-info">
-                        <span class="mood-state-badge {{ mood.mental_state|lower|replace(' ', '-') }}">
-                          {{ mood.mental_state }}
-                        </span>
-                        <span class="mood-timestamp">
-                          {% if mood.timestamp_display %} 
-                            {{ mood.timestamp_display }} 
-                          {% else %}
-                            {{ mood.timestamp.strftime('%b %d, %Y %I:%M %p') if mood.timestamp and not mood.timestamp is string else mood.timestamp }}
-                          {% endif %}
-                        </span>
+            <!-- Recent Journals -->
+            <div class="recent-journals-card dashboard-card">
+              <h3>📝 Recent Reflections</h3>
+              {% set valid_journals = moods|selectattr('journal_entry')|list %}
+              
+              {% if valid_journals %}
+                <div class="journals-list">
+                  {% for mood in valid_journals[:3] %}
+                    <div class="journal-item">
+                      <div class="journal-header">
+                        <strong>{{ mood.timestamp.strftime('%a') if mood.timestamp else 'Recent' }}</strong>
+                        <span class="journal-mood-badge">{{ mood.mental_state }}</span>
                       </div>
-                      <button class="delete-mood-btn" data-id="{{ mood.id }}">🗑️</button>
+                      <blockquote class="journal-text">{{ mood.journal_entry }}</blockquote>
                     </div>
-                    
-                    {% if mood.journal_entry %}
-                    <div class="mood-journal-entry">
-                      <h5>📝 Journal Entry</h5>
-                      <p>{{ mood.journal_entry }}</p>
-                    </div>
-                    {% endif %}
-                    
-                    {% if mood.diagnosis_tags %}
-                    <div class="mood-tags">
-                      {% for tag in mood.diagnosis_tags %}
-                        <span class="mood-tag">{{ tag }}</span>
-                      {% endfor %}
-                    </div>
-                    {% endif %}
-                  </div>
                   {% endfor %}
                 </div>
               {% else %}
-                <div class="empty-history">
-                  <p>No mood history yet.</p>
-                  <a href="/mood-tracker" class="add-mood-link">Start tracking</a>
+                <div class="empty-journals">
+                  <p>✏️ No reflections yet.</p>
+                  <a href="/mood-tracker" class="add-journal-link">Add your first journal entry</a>
                 </div>
               {% endif %}
             </div>
           </div>
-
-          <!-- Recent Journals -->
-          <div class="recent-journals-card dashboard-card">
-            <h3>📝 Recent Reflections</h3>
-            {% set valid_journals = moods|selectattr('journal_entry')|list %}
-            
-            {% if valid_journals %}
-              <div class="journals-list">
-                {% for mood in valid_journals[:3] %}
-                  <div class="journal-item">
-                    <div class="journal-header">
-                      <strong>{{ mood.timestamp.strftime('%a') if mood.timestamp else 'Recent' }}</strong>
-                      <span class="journal-mood-badge">{{ mood.mental_state }}</span>
-                    </div>
-                    <blockquote class="journal-text">{{ mood.journal_entry }}</blockquote>
-                  </div>
-                {% endfor %}
-              </div>
-            {% else %}
-              <div class="empty-journals">
-                <p>✏️ No reflections yet.</p>
-                <a href="/mood-tracker" class="add-journal-link">Add your first journal entry</a>
-              </div>
-            {% endif %}
-          </div>
         </div>
-
       </div>
     </main>
   </div>
-
+  
   <!-- All your existing script tags and data -->
   <script id="moodData" type="application/json">{{ moods | tojson }}</script>
   <script id="chartConfig" type="application/json">
@@ -344,10 +782,180 @@
   }
   </script>
   <script id="weeklyMoodData" type="application/json">{{ weekly_mood_data | tojson }}</script>
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="{{ url_for('static', filename='js/mood-chart.js') }}"></script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  
+  <!-- Friend Request Notification Functions -->
+  <script>
+    // Quick respond to friend request from notification
+    async function quickRespondToRequest(requestId, action, buttonElement) {
+        // Get the request item container
+        const requestItem = buttonElement.closest('.friend-request-item');
+        const allButtons = requestItem.querySelectorAll('.quick-action-btn');
+        
+        // Store original state
+        const originalContent = buttonElement.innerHTML;
+        
+        // Disable all buttons and show loading
+        allButtons.forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('loading');
+        });
+        
+        // Update clicked button with loading state
+        buttonElement.innerHTML = '<span class="action-icon">⏳</span>';
+        
+        try {
+            const response = await fetch('/respond-friend-request/' + requestId + '/' + action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Show success animation
+                if (action === 'accepted') {
+                    buttonElement.innerHTML = '<span class="action-icon">✅</span>';
+                    showDashboardToast('Friend request accepted! 🎉', 'success');
+                } else {
+                    buttonElement.innerHTML = '<span class="action-icon">❌</span>';
+                    showDashboardToast('Friend request declined', 'info');
+                }
+                
+                // Animate request removal
+                requestItem.style.animation = 'slideOutRight 0.5s ease-out forwards';
+                
+                setTimeout(() => {
+                    requestItem.remove();
+                    
+                    // Check if no more requests
+                    const remainingRequests = document.querySelectorAll('.friend-request-item');
+                    if (remainingRequests.length === 0) {
+                        // Close modal if no more requests
+                        setTimeout(() => {
+                            closeFriendNotification();
+                            showDashboardToast('All friend requests handled! 👍', 'success');
+                        }, 500);
+                    }
+                }, 500);
+                
+            } else {
+                showDashboardToast(data.error || 'Failed to respond to request', 'error');
+                // Restore buttons
+                allButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.classList.remove('loading');
+                });
+                buttonElement.innerHTML = originalContent;
+            }
+        } catch (error) {
+            console.error('Quick response error:', error);
+            showDashboardToast('Failed to respond to request', 'error');
+            // Restore buttons
+            allButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('loading');
+            });
+            buttonElement.innerHTML = originalContent;
+        }
+    }
+    
+    // Dashboard toast notification system
+    function showDashboardToast(message, type) {
+        // Create toast container if it doesn't exist
+        let container = document.getElementById('dashboardToastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'dashboardToastContainer';
+            container.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 10001;
+            `;
+            document.body.appendChild(container);
+        }
+        
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            min-width: 280px;
+            backdrop-filter: blur(10px);
+        `;
+        
+        // Set background based on type
+        if (type === 'success') {
+            toast.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        } else if (type === 'error') {
+            toast.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+        } else {
+            toast.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+        }
+        
+        let icon = 'ℹ️';
+        if (type === 'success') icon = '✅';
+        if (type === 'error') icon = '❌';
+        
+        toast.innerHTML = '<span>' + icon + '</span><span>' + message + '</span>';
+        
+        container.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+            toast.style.opacity = '1';
+        }, 100);
+        
+        // Hide and remove toast
+        setTimeout(() => {
+            toast.style.transform = 'translateX(100%)';
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (container.contains(toast)) {
+                    container.removeChild(toast);
+                }
+            }, 300);
+        }, 3500);
+    }
+    
+    // Friend Request Notification Functions
+    function closeFriendNotification() {
+        const modal = document.getElementById('friendRequestModal');
+        if (modal) {
+            modal.style.animation = 'modalFadeOut 0.3s ease-out forwards';
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    }
+    
+    // Auto-show modal on page load (with slight delay for better UX)
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('friendRequestModal');
+        if (modal) {
+            // Small delay to let dashboard load first
+            setTimeout(() => {
+                modal.style.display = 'flex';
+            }, 500);
+        }
+    });
+</script>
 
   <!-- Sidebar Toggle Script -->
   <script>
@@ -357,7 +965,7 @@
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     const toggleBtn = document.getElementById('sidebarToggleBtn');
     const closeBtn = document.getElementById('sidebarCloseBtn');
-
+    
     // Toggle sidebar
     function toggleSidebar() {
       sidebar.classList.toggle('sidebar-closed');
@@ -369,7 +977,7 @@
         document.body.classList.toggle('sidebar-open');
       }
     }
-
+    
     // Close sidebar
     function closeSidebar() {
       sidebar.classList.add('sidebar-closed');
@@ -377,12 +985,12 @@
       sidebarOverlay.classList.remove('active');
       document.body.classList.remove('sidebar-open');
     }
-
+    
     // Event listeners
     toggleBtn.addEventListener('click', toggleSidebar);
     closeBtn.addEventListener('click', closeSidebar);
     sidebarOverlay.addEventListener('click', closeSidebar);
-
+    
     // Handle window resize
     window.addEventListener('resize', function() {
       if (window.innerWidth > 1024) {
@@ -390,7 +998,7 @@
         document.body.classList.remove('sidebar-open');
       }
     });
-
+    
     // Auto-close on mobile when clicking nav links
     document.querySelectorAll('.nav-item').forEach(link => {
       link.addEventListener('click', function() {
@@ -401,7 +1009,7 @@
     });
   });
   </script>
-
+  
   <!-- Weekly Chart Script (embedded) -->
   <script>
   document.addEventListener("DOMContentLoaded", function() {

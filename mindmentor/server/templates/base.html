@@ -1,28 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MindMentor</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- In base.html head section -->
+<!-- Load critical CSS inline -->
+<link rel="preload" href="{{ url_for('static', filename='css/styles.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"></noscript>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- CRITICAL CSS - Load First to Prevent FOUC -->
+    <style>
+        /* Critical styles that must load immediately */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            background: #f7fafc;
+            color: #1a202c;
+        }
+        
+        /* Prevent layout shift during load */
+        .page-container {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+        
+        .page-container.loaded {
+            opacity: 1;
+        }
+        
+        /* Loading spinner to show while CSS loads */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+        
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: white;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+    </style>
+    
+    <title>{% block title %}MindMentor{% endblock %}</title>
+    
+    <!-- Preload important resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    
+    <!-- Additional head content from child templates -->
+    {% block head %}{% endblock %}
 </head>
 <body>
-
-  <header>
-    <h1 style="text-align: center;">🧠 MindMentor</h1>
-    <nav style="text-align: center;">
-      <a href="/dashboard">Dashboard</a> |
-      <a href="/logout">Logout</a>
-    </nav>
-  </header>
-
-  <main>
-    {% block content %}{% endblock %}
-  </main>
-
-  <footer style="text-align: center; margin-top: 2rem;">
-    <p>&copy; 2025 MindMentor</p>
-  </footer>
-
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div style="text-align: center;">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading MindMentor...</div>
+        </div>
+    </div>
+    
+    <!-- Main content wrapper -->
+    <div id="pageContainer" class="page-container">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Page initialization script -->
+    <script>
+        // Prevent FOUC by managing page visibility
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading overlay
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const pageContainer = document.getElementById('pageContainer');
+            
+            // Small delay to ensure all styles are applied
+            setTimeout(function() {
+                loadingOverlay.classList.add('hidden');
+                pageContainer.classList.add('loaded');
+                
+                // Remove loading overlay completely after transition
+                setTimeout(function() {
+                    if (loadingOverlay) {
+                        loadingOverlay.remove();
+                    }
+                }, 500);
+            }, 100);
+        });
+        
+        // Suppress console warnings about missing source maps
+        if (typeof console !== 'undefined' && console.warn) {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && (
+                    args[0].includes('Source map error') || 
+                    args[0].includes('DevTools failed to load SourceMap')
+                )) {
+                    return; // Ignore source map errors
+                }
+                originalWarn.apply(console, args);
+            };
+        }
+    </script>
 </body>
 </html>
