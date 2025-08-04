@@ -1,6 +1,485 @@
 {% extends "base.html" %}
 {% block title %}{{ profile.full_name or profile.username }} - MindMentor{% endblock %}
 
+{% block head %}
+{{ super() }}
+<style>
+.social-profile-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+}
+
+.social-profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Profile Header */
+.social-profile-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.social-profile-header-content {
+    padding: 2.5rem;
+}
+
+.social-back-nav {
+    margin-bottom: 1.5rem;
+}
+
+.social-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+    font-size: 1rem;
+}
+
+.social-back-btn:hover {
+    color: #1e293b;
+}
+
+.social-profile-info-section {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2rem;
+    align-items: start;
+}
+
+.social-profile-avatar-container {
+    position: relative;
+}
+
+.social-profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid #e2e8f0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.social-profile-online-indicator {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: #10b981;
+    border: 4px solid white;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.social-profile-details {
+    min-width: 0;
+}
+
+.social-profile-name {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+}
+
+.social-profile-username {
+    font-size: 1.2rem;
+    color: #64748b;
+    margin: 0 0 1rem 0;
+    font-weight: 500;
+}
+
+.social-profile-bio {
+    font-size: 1.1rem;
+    color: #4b5563;
+    line-height: 1.6;
+    margin: 0 0 1rem 0;
+}
+
+.social-profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.social-profile-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.social-profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.social-pending-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Buttons */
+.social-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.social-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.social-btn-add-friend {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.social-btn-add-friend:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5a67d8, #6b46c1);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.social-btn-pending {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.social-btn-accept {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.social-btn-accept:hover:not(:disabled) {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+}
+
+.social-btn-decline {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+}
+
+.social-btn-decline:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.social-btn-friends {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+/* Profile Content */
+.social-profile-content {
+    margin-bottom: 2rem;
+}
+
+.social-content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.social-content-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.social-content-card:hover {
+    transform: translateY(-5px);
+}
+
+.social-card-header {
+    padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.social-card-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.social-card-content {
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+}
+
+/* Mood Card */
+.social-mood-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.social-mood-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.social-mood-label {
+    color: #64748b;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.social-mood-value {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.social-mood-bar {
+    width: 120px;
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.social-mood-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+    transition: width 0.5s ease;
+}
+
+.social-mood-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 1rem;
+}
+
+.social-mood-tag {
+    padding: 6px 16px;
+    background: linear-gradient(135deg, #ebf4ff, #dbeafe);
+    color: #2563eb;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #bfdbfe;
+}
+
+/* Streak Card */
+.social-streak-display {
+    text-align: center;
+}
+
+.social-streak-number {
+    font-size: 4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+
+.social-streak-label {
+    color: #64748b;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+}
+
+/* Activity Card */
+.social-activity-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.social-activity-stat {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.social-stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+
+.social-stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    font-weight: 600;
+}
+
+/* Notice Sections */
+.social-limited-view-notice,
+.social-private-profile {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 4rem 2rem;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.social-notice-icon,
+.social-private-icon {
+    font-size: 5rem;
+    margin-bottom: 1.5rem;
+}
+
+.social-notice-title,
+.social-private-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+}
+
+.social-notice-text,
+.social-private-text {
+    color: #64748b;
+    font-size: 1.2rem;
+    line-height: 1.7;
+    margin: 0 0 0.5rem 0;
+}
+
+.social-private-subtext {
+    color: #94a3b8;
+    font-size: 1rem;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Toast System */
+.social-toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.social-toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.4s ease;
+    min-width: 320px;
+    backdrop-filter: blur(10px);
+}
+
+.social-toast-show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.social-toast-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.social-toast-error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.social-toast-info {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .social-profile-page {
+        padding: 15px;
+    }
+    
+    .social-profile-header-content {
+        padding: 2rem 1.5rem;
+    }
+    
+    .social-profile-info-section {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 1.5rem;
+    }
+    
+    .social-profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .social-profile-name {
+        font-size: 1.8rem;
+    }
+    
+    .social-profile-meta {
+        justify-content: center;
+    }
+    
+    .social-content-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .social-activity-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .social-pending-actions {
+        flex-direction: row;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="social-profile-page">
     <div class="social-profile-container">
@@ -11,7 +490,7 @@
                 <!-- Back Button -->
                 <div class="social-back-nav">
                     <a href="/discover" class="social-back-btn">
-                        <span class="social-back-icon">←</span>
+                        <span>←</span>
                         Back to Discover
                     </a>
                 </div>
@@ -21,8 +500,10 @@
                     <div class="social-profile-avatar-section">
                         <div class="social-profile-avatar-container">
                             <img src="{{ profile.avatar_url or '/static/images/default-avatar.png' }}" 
-                                 alt="{{ profile.username }}'s avatar"
-                                 class="social-profile-avatar">
+     alt="{{ profile.username or 'User' }}'s avatar"
+     onerror="this.src='/static/images/default-avatar.png'; this.onerror=null;"
+     class="social-profile-avatar">
+
                             {% if profile.is_online %}
                             <div class="social-profile-online-indicator"></div>
                             {% endif %}
@@ -40,13 +521,13 @@
                         <div class="social-profile-meta">
                             {% if profile.location and can_view_profile %}
                             <span class="social-profile-meta-item">
-                                <span class="social-meta-icon">📍</span>
+                                <span>📍</span>
                                 {{ profile.location }}
                             </span>
                             {% endif %}
                             
                             <span class="social-profile-meta-item">
-                                <span class="social-meta-icon">🗓️</span>
+                                <span>🗓️</span>
                                 Joined {{ profile.created_at[:7] if profile.created_at else 'Recently' }}
                             </span>
                         </div>
@@ -58,26 +539,26 @@
                             {% if friendship.status == 'pending' %}
                                 {% if friendship.requester_id == session.user_id %}
                                 <button class="social-btn social-btn-pending" disabled>
-                                    <span class="social-btn-icon">⏳</span>
+                                    <span>⏳</span>
                                     Request Sent
                                 </button>
                                 {% else %}
                                 <div class="social-pending-actions">
                                     <button onclick="respondToRequest('{{ friendship.id }}', 'accepted')" 
                                             class="social-btn social-btn-accept">
-                                        <span class="social-btn-icon">✅</span>
+                                        <span>✅</span>
                                         Accept
                                     </button>
                                     <button onclick="respondToRequest('{{ friendship.id }}', 'declined')" 
                                             class="social-btn social-btn-decline">
-                                        <span class="social-btn-icon">❌</span>
+                                        <span>❌</span>
                                         Decline
                                     </button>
                                 </div>
                                 {% endif %}
                             {% elif friendship.status == 'accepted' %}
                             <button class="social-btn social-btn-friends" disabled>
-                                <span class="social-btn-icon">✅</span>
+                                <span>✅</span>
                                 Friends
                             </button>
                             {% endif %}
@@ -85,7 +566,7 @@
                         <button onclick="sendFriendRequest('{{ profile.id }}')" 
                                 class="social-btn social-btn-add-friend"
                                 id="addFriendBtn">
-                            <span class="social-btn-icon">➕</span>
+                            <span>➕</span>
                             Add Friend
                         </button>
                         {% endif %}
@@ -101,52 +582,50 @@
                 <div class="social-content-grid">
                     
                     <!-- Mood Summary Card -->
-<!-- Mood Summary Card -->
-{% if can_view_mood and mood_data.recent_mood %}
-<div class="social-content-card social-mood-card">
-    <div class="social-card-header">
-        <h3 class="social-card-title">
-            <span class="social-card-icon">🎭</span>
-            Recent Mood
-        </h3>
-    </div>
-    
-    <div class="social-card-content">
-        <div class="social-mood-info">
-            <div class="social-mood-item">
-                <span class="social-mood-label">Last Check-in:</span>
-                <span class="social-mood-value">{{ mood_data.recent_mood.timestamp[:10] }}</span>
-            </div>
-            
-            {% if mood_data.recent_mood.stress_level %}
-            <div class="social-mood-item">
-                <span class="social-mood-label">Stress Level:</span>
-                <div class="social-mood-bar">
-                    <div class="social-mood-bar-fill" 
-                         data-stress-level="{{ mood_data.recent_mood.stress_level }}"></div>
-                </div>
-            </div>
-            {% endif %}
-            
-            {% if mood_data.recent_mood.diagnosis_tags %}
-            <div class="social-mood-tags">
-                {% for tag in mood_data.recent_mood.diagnosis_tags[:3] %}
-                <span class="social-mood-tag">{{ tag }}</span>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
-{% endif %}
-
+                    {% if can_view_mood and mood_data.recent_mood %}
+                    <div class="social-content-card social-mood-card">
+                        <div class="social-card-header">
+                            <h3 class="social-card-title">
+                                <span>🎭</span>
+                                Recent Mood
+                            </h3>
+                        </div>
+                        
+                        <div class="social-card-content">
+                            <div class="social-mood-info">
+                                <div class="social-mood-item">
+                                    <span class="social-mood-label">Last Check-in:</span>
+                                    <span class="social-mood-value">{{ mood_data.recent_mood.timestamp[:10] }}</span>
+                                </div>
+                                
+                                {% if mood_data.recent_mood.stress_level %}
+                                <div class="social-mood-item">
+                                    <span class="social-mood-label">Stress Level:</span>
+                                    <div class="social-mood-bar">
+                                        <div class="social-mood-bar-fill" 
+                                             data-stress-level="{{ mood_data.recent_mood.stress_level }}"></div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if mood_data.recent_mood.diagnosis_tags %}
+                                <div class="social-mood-tags">
+                                    {% for tag in mood_data.recent_mood.diagnosis_tags[:3] %}
+                                    <span class="social-mood-tag">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     
                     <!-- Streak Card -->
                     {% if can_view_streak and mood_data.streak is not none %}
                     <div class="social-content-card social-streak-card">
                         <div class="social-card-header">
                             <h3 class="social-card-title">
-                                <span class="social-card-icon">🔥</span>
+                                <span>🔥</span>
                                 Consistency Streak
                             </h3>
                         </div>
@@ -165,7 +644,7 @@
                     <div class="social-content-card social-activity-card">
                         <div class="social-card-header">
                             <h3 class="social-card-title">
-                                <span class="social-card-icon">📊</span>
+                                <span>📊</span>
                                 Activity Summary
                             </h3>
                         </div>
@@ -219,19 +698,6 @@
 <!-- Toast Messages -->
 <div id="socialToastContainer" class="social-toast-container"></div>
 
-<!-- FIXED: Flash Messages Data (Outside JavaScript) -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-<script id="flashMessages" type="application/json">
-[
-{% for category, message in messages %}
-    {"category": "{{ category }}", "message": "{{ message|e }}"}{% if not loop.last %},{% endif %}
-{% endfor %}
-]
-</script>
-{% endif %}
-{% endwith %}
-
 <script>
 // Friend Request Functions
 async function sendFriendRequest(userId) {
@@ -239,7 +705,7 @@ async function sendFriendRequest(userId) {
     const originalContent = btn.innerHTML;
     
     btn.disabled = true;
-    btn.innerHTML = '<span class="social-btn-icon">⏳</span> Sending...';
+    btn.innerHTML = '<span>⏳</span> Sending...';
     
     try {
         const response = await fetch('/send-friend-request/' + userId, {
@@ -254,7 +720,7 @@ async function sendFriendRequest(userId) {
         
         if (data.success) {
             showSocialToast(data.message, 'success');
-            btn.innerHTML = '<span class="social-btn-icon">⏳</span> Request Sent';
+            btn.innerHTML = '<span>⏳</span> Request Sent';
             btn.className = 'social-btn social-btn-pending';
         } else {
             showSocialToast(data.error || 'Failed to send request', 'error');
@@ -318,16 +784,14 @@ function showSocialToast(message, type) {
     if (type === 'success') icon = '✅';
     if (type === 'error') icon = '❌';
     
-    toast.innerHTML = '<span class="social-toast-icon">' + icon + '</span><span class="social-toast-message">' + message + '</span>';
+    toast.innerHTML = '<span>' + icon + '</span><span>' + message + '</span>';
     
     container.appendChild(toast);
     
-    // Show toast
     setTimeout(function() {
         toast.classList.add('social-toast-show');
     }, 100);
     
-    // Hide and remove toast
     setTimeout(function() {
         toast.classList.remove('social-toast-show');
         setTimeout(function() {
@@ -338,42 +802,7 @@ function showSocialToast(message, type) {
     }, 3000);
 }
 
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    // FIXED: Handle Flash Messages from JSON data
-    const flashMessagesScript = document.getElementById('flashMessages');
-    if (flashMessagesScript) {
-        try {
-            const messages = JSON.parse(flashMessagesScript.textContent);
-            messages.forEach(function(msg) {
-                showSocialToast(msg.message, msg.category);
-            });
-        } catch (error) {
-            console.log('No flash messages to display');
-        }
-    }
-});
-
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle Flash Messages from JSON data
-    const flashMessagesScript = document.getElementById('flashMessages');
-    if (flashMessagesScript) {
-        try {
-            const messages = JSON.parse(flashMessagesScript.textContent);
-            messages.forEach(function(msg) {
-                showSocialToast(msg.message, msg.category);
-            });
-        } catch (error) {
-            console.log('No flash messages to display');
-        }
-    }
-    
-    // FIXED: Initialize mood bars with JavaScript
-    initializeMoodBars();
-});
-
-// Function to safely set mood bar widths
+// Initialize mood bars with JavaScript
 function initializeMoodBars() {
     const moodBars = document.querySelectorAll('.social-mood-bar-fill[data-stress-level]');
     
@@ -381,484 +810,20 @@ function initializeMoodBars() {
         const stressLevel = parseFloat(bar.getAttribute('data-stress-level')) || 0;
         let width = Math.round(stressLevel * 20);
         
-        // Ensure width stays within bounds
         if (width > 100) width = 100;
         if (width < 0) width = 0;
         
-        // Set the width using JavaScript
         bar.style.width = width + '%';
     });
 }
 
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize mood bars
+    initializeMoodBars();
+    
+    // Handle flash messages (if any)
+    // Add your flash message handling here if needed
+});
 </script>
-
-<style>
-.social-profile-page {
-    min-height: 100vh;
-    background: #f7fafc;
-    padding: 20px;
-}
-
-.social-profile-container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
-/* Profile Header */
-.social-profile-header {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-    overflow: hidden;
-}
-
-.social-profile-header-content {
-    padding: 2rem;
-}
-
-.social-back-nav {
-    margin-bottom: 1.5rem;
-}
-
-.social-back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #4a5568;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-}
-
-.social-back-btn:hover {
-    color: #2d3748;
-}
-
-.social-back-icon {
-    font-size: 1.2rem;
-}
-
-.social-profile-info-section {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 2rem;
-    align-items: start;
-}
-
-.social-profile-avatar-container {
-    position: relative;
-}
-
-.social-profile-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid #e2e8f0;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.social-profile-online-indicator {
-    position: absolute;
-    bottom: 4px;
-    right: 4px;
-    width: 20px;
-    height: 20px;
-    background: #48bb78;
-    border: 3px solid white;
-    border-radius: 50%;
-}
-
-.social-profile-details {
-    min-width: 0;
-}
-
-.social-profile-name {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1a202c;
-    margin: 0 0 0.25rem 0;
-}
-
-.social-profile-username {
-    font-size: 1.1rem;
-    color: #718096;
-    margin: 0 0 1rem 0;
-}
-
-.social-profile-bio {
-    font-size: 1rem;
-    color: #4a5568;
-    line-height: 1.5;
-    margin: 0 0 1rem 0;
-}
-
-.social-profile-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.social-profile-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #718096;
-    font-size: 0.9rem;
-}
-
-.social-meta-icon {
-    font-size: 1rem;
-}
-
-.social-profile-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.social-pending-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-/* Buttons */
-.social-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s;
-    min-width: 140px;
-}
-
-.social-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.social-btn-add-friend {
-    background: #4299e1;
-    color: white;
-}
-
-.social-btn-add-friend:hover:not(:disabled) {
-    background: #3182ce;
-    transform: translateY(-1px);
-}
-
-.social-btn-pending {
-    background: #ed8936;
-    color: white;
-}
-
-.social-btn-accept {
-    background: #48bb78;
-    color: white;
-}
-
-.social-btn-accept:hover:not(:disabled) {
-    background: #38a169;
-}
-
-.social-btn-decline {
-    background: #f56565;
-    color: white;
-}
-
-.social-btn-decline:hover:not(:disabled) {
-    background: #e53e3e;
-}
-
-.social-btn-friends {
-    background: #48bb78;
-    color: white;
-}
-
-/* Profile Content */
-.social-profile-content {
-    margin-bottom: 2rem;
-}
-
-.social-content-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.social-content-card {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border: 1px solid #e2e8f0;
-    overflow: hidden;
-}
-
-.social-card-header {
-    padding: 1.5rem 1.5rem 0 1.5rem;
-}
-
-.social-card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.social-card-icon {
-    font-size: 1.3rem;
-}
-
-.social-card-content {
-    padding: 1rem 1.5rem 1.5rem 1.5rem;
-}
-
-/* Mood Card */
-.social-mood-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.social-mood-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.social-mood-label {
-    color: #718096;
-    font-size: 0.9rem;
-}
-
-.social-mood-value {
-    font-weight: 600;
-    color: #2d3748;
-}
-
-.social-mood-bar {
-    width: 100px;
-    height: 8px;
-    background: #e2e8f0;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.social-mood-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #48bb78, #ed8936, #f56565);
-    transition: width 0.3s ease;
-}
-
-.social-mood-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 1rem;
-}
-
-.social-mood-tag {
-    padding: 4px 12px;
-    background: #ebf8ff;
-    color: #2b6cb0;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
-}
-
-/* Streak Card */
-.social-streak-display {
-    text-align: center;
-}
-
-.social-streak-number {
-    font-size: 3rem;
-    font-weight: 700;
-    color: #ed8936;
-    line-height: 1;
-}
-
-.social-streak-label {
-    color: #718096;
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-}
-
-/* Activity Card */
-.social-activity-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.social-activity-stat {
-    text-align: center;
-    padding: 1rem;
-    background: #f7fafc;
-    border-radius: 8px;
-}
-
-.social-stat-number {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2d3748;
-    line-height: 1;
-}
-
-.social-stat-label {
-    color: #718096;
-    font-size: 0.8rem;
-    margin-top: 0.25rem;
-}
-
-/* Notice Sections */
-.social-limited-view-notice,
-.social-private-profile {
-    background: white;
-    border-radius: 12px;
-    padding: 3rem 2rem;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border: 1px solid #e2e8f0;
-}
-
-.social-notice-icon,
-.social-private-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-}
-
-.social-notice-title,
-.social-private-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 0 0 1rem 0;
-}
-
-.social-notice-text,
-.social-private-text {
-    color: #718096;
-    font-size: 1rem;
-    line-height: 1.6;
-    margin: 0 0 0.5rem 0;
-}
-
-.social-private-subtext {
-    color: #a0aec0;
-    font-size: 0.9rem;
-    font-style: italic;
-    margin: 0;
-}
-
-/* Toast System */
-.social-toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.social-toast {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    margin-bottom: 10px;
-    border-radius: 8px;
-    color: white;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transform: translateX(100%);
-    opacity: 0;
-    transition: all 0.3s ease;
-}
-
-.social-toast-show {
-    transform: translateX(0);
-    opacity: 1;
-}
-
-.social-toast-success {
-    background: #48bb78;
-}
-
-.social-toast-error {
-    background: #f56565;
-}
-
-.social-toast-info {
-    background: #4299e1;
-}
-
-.social-toast-icon {
-    font-size: 1.1rem;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .social-profile-page {
-        padding: 15px;
-    }
-    
-    .social-profile-header-content {
-        padding: 1.5rem;
-    }
-    
-    .social-profile-info-section {
-        grid-template-columns: 1fr;
-        text-align: center;
-        gap: 1.5rem;
-    }
-    
-    .social-profile-avatar {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .social-profile-name {
-        font-size: 1.75rem;
-    }
-    
-    .social-profile-meta {
-        justify-content: center;
-    }
-    
-    .social-content-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .social-activity-stats {
-        grid-template-columns: 1fr;
-    }
-    
-    .social-pending-actions {
-        flex-direction: row;
-    }
-    
-    .social-toast-container {
-        left: 15px;
-        right: 15px;
-        top: 15px;
-    }
-    
-    .social-toast {
-        margin-bottom: 8px;
-    }
-}
-</style>
 {% endblock %}
