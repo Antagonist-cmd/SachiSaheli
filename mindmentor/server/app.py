@@ -1,4 +1,5 @@
 # server/app.py
+import json
 import os
 import sys
 from flask import Flask, render_template, redirect, session, url_for, jsonify, request, flash
@@ -36,7 +37,6 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")  # store securely in prod
 CORS(app)
 
-
 # Import blueprints after app creation
 from routes.auth_routes import auth_bp
 from routes.mood_routes import mood_bp
@@ -52,49 +52,27 @@ app.register_blueprint(help_bp)
 app.register_blueprint(checkin_bp)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
+# UPDATED: Enhanced tag meanings for all conditions including substance-related ones
 TAG_MEANINGS = {
-    "Anxiety": "A feeling of worry, nervousness, or unease, typically about an imminent event.",
-    "Burnout": "Physical and mental exhaustion often caused by prolonged stress or overwork.",
-    "Depression": "A persistent feeling of sadness and loss of interest that affects how you feel and act.",
+    "Addiction": "Compulsive engagement in rewarding stimuli despite adverse consequences.",
+    "Anxiety Disorder": "Excessive worry, nervousness, or fear that interferes with daily activities.",
+    "Apathy": "Lack of interest, enthusiasm, or concern about activities and life in general.",
+    "Burnout": "Physical and mental exhaustion caused by prolonged stress or overwork.",
+    "Depression": "Persistent sadness and loss of interest affecting daily functioning.",
+    "Disordered Eating": "Abnormal or disturbed eating habits that may harm physical or mental health.",
+    "Generalized Anxiety": "Persistent and excessive worry about various aspects of life.",
     "Healthy": "A positive state of mental well-being with good emotional regulation.",
-    "Hopelessness": "A feeling or state of despair; lack of hope.",
-    "Isolation Risk": "Tendency to withdraw socially, which can impact overall mental health.",
-    "Low Self-Esteem": "Viewing yourself in a negative or critical way; lack of confidence.",
-    "Mood Swings": "Rapid, often extreme fluctuations in one's emotional state.",
-    "Stable": "Consistently balanced mood and emotions.",
-    "Stress": "State of mental or emotional strain from challenging circumstances.",
-    # ...add other tags as needed
-}
-TAG_SUGGESTIONS = {
-    "Anxiety": [
-        "Practice deep breathing or grounding exercises.",
-        "Limit caffeine and screen time.",
-        "Try guided meditation or mindfulness apps."
-    ],
-    "Burnout": [
-        "Schedule regular breaks throughout your day.",
-        "Consider light activities like walking or stretching.",
-        "Reach out to someone you trust about how you are feeling."
-    ],
-    "Depression": [
-        "Spend time in sunlight or nature when possible.",
-        "Keep a gratitude journal.",
-        "Talk to a mental health professional if feelings persist."
-    ],
-    "Healthy": [
-        "Maintain your positive routines!",
-        "Keep connecting with friends or loved ones.",
-        "Celebrate small wins and self-care moments."
-    ],
-    "Hopelessness": [
-        "Talk to a trusted friend or counselor about your feelings.",
-        "Reflect on small positive changes each day.",
-        "Remember that feelings are temporary and support is available."
-    ],
-    # ...add more suggestions as needed
+    "Hopelessness": "A feeling of despair or lack of hope about the future.",
+    "Hypersomnia": "Excessive daytime sleepiness or prolonged nighttime sleep.",
+    "Insomnia": "Difficulty falling asleep, staying asleep, or poor sleep quality.",
+    "Isolation Risk": "Tendency to withdraw socially, which can impact mental health.",
+    "Low Self-Esteem": "Negative view of oneself; lack of confidence in abilities or worth.",
+    "Low Self-Worth": "Deep-seated belief that one is not valuable or deserving of love/respect.",
+    "Mood Swings": "Rapid, extreme fluctuations in emotional state.",
+    "Substance Dependence": "Physical or psychological reliance on substances despite harmful effects."
 }
 
+# REMOVED: TAG_SUGGESTIONS - No longer needed since we use AI
 
 # Page routes
 @app.route("/")
@@ -155,10 +133,10 @@ def derive_simple_mood(tags):
     }
 
     sad_tags = {
-        "anxiety", "burnout", "insomnia", "stress", "low motivation",
-        "low self-esteem", "emotional instability", "isolation",
-        "social withdrawal", "substance abuse", "disordered eating",
-        "mood swings", "apathy", "addiction", "substance dependence"
+        "anxiety", "anxiety disorder", "generalized anxiety", "burnout", "insomnia", 
+        "stress", "low motivation", "low self-esteem", "low self-worth", "emotional instability", 
+        "isolation", "isolation risk", "social withdrawal", "substance abuse", "addiction",
+        "substance dependence", "disordered eating", "mood swings", "apathy"
     }
 
     happy_tags = {
@@ -181,9 +159,6 @@ def derive_simple_mood(tags):
         return "Happy"
 
     return "Neutral"
-
-
-
 
 def process_mood_data(moods):
     from collections import Counter, defaultdict
@@ -386,7 +361,6 @@ def convert_mood_to_score(mood):
     }
     return mood_scores.get(mood, 3)
 
-
 @app.route("/api/mood/chart-data")
 def get_chart_data():
     """AJAX endpoint for dynamic chart updates - minimal addition"""
@@ -417,7 +391,6 @@ def get_chart_data():
     except Exception as e:
         print(f"Chart data error: {str(e)}")
         return jsonify({"error": "Failed to fetch chart data"}), 500
-
 
 @app.route("/dashboard")
 def dashboard():
@@ -580,7 +553,6 @@ def discover_users():
             users = []
     
     return render_template("discover.html", users=users, query=query)
-
 
 @app.route("/social-profile/<user_id>")
 def view_social_profile(user_id):
@@ -902,7 +874,6 @@ def delete_account():
     except Exception as e:
         return jsonify({"error": f"Failed to delete account: {str(e)}"}), 500
 
-
 @app.route('/delete_mood/<mood_id>', methods=['DELETE'])
 def delete_mood(mood_id):
     if "user_id" not in session:
@@ -921,6 +892,7 @@ def delete_mood(mood_id):
         print(f"Delete error: {str(e)}")
         return jsonify({"error": "Deletion failed"}), 500
 
+# UPDATED: mood_tracker route to not pass TAG_SUGGESTIONS (since we use AI now)
 @app.route("/mood-tracker")
 def mood_tracker():
     if "user_id" not in session:
@@ -929,15 +901,13 @@ def mood_tracker():
             return redirect(url_for("auth.login"))
         except:
             return redirect(url_for("login_page"))
-    # You may fetch previous diagnosis tags from session, DB, or elsewhere if you want
-    # For now simply pass the mappings so you can use them in the template
 
+    # UPDATED: Only pass tag meanings (remove TAG_SUGGESTIONS since we use AI)
     return render_template(
         "mood_tracker.html",
         tag_meanings=TAG_MEANINGS,
-        tag_suggestions=TAG_SUGGESTIONS,
+        # Removed tag_suggestions - AI will generate these dynamically
     )
-
 
 @app.route("/logout")
 def logout_redirect():

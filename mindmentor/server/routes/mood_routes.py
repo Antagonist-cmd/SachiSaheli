@@ -18,9 +18,39 @@ def checkin():
 
     try:
         data = request.get_json()
-        
         print(f"Received data: {data}")
 
+        # FIXED: Complete prediction_data with ALL 11 features including substance_abuse
+        prediction_data = {
+            "age": int(data.get("age", 19)),
+            "gender": data.get("gender", "prefer-not-to-say"),
+            "stress_level": float(data.get("stress_level", 5)),
+            "sleep_hours": float(data.get("sleep_hours", 7)),
+            "sociability": float(data.get("sociability", 5)),
+            "anxiety": float(data.get("anxiety", 5)),
+            "emotional_stability": float(data.get("emotional_stability", 5)),
+            "self_esteem": float(data.get("self_esteem", 5)),
+            "motivation": float(data.get("motivation", 5)),
+            "eating_habits": float(data.get("eating_habits", 5)),
+            "substance_abuse": float(data.get("substance_abuse", 0)),
+            "journal_entry": data.get("journal_entry", "")
+        }
+        
+        print(f"Complete prediction data: {prediction_data}")
+
+        # Get AI-powered prediction
+        prediction_result = predict_mood(prediction_data)
+        
+        # Ensure all required fields exist with safe defaults
+        predicted_tags = prediction_result.get("tags", [])
+        direct_actions = prediction_result.get("direct_actions", {
+            "immediate_steps": [],
+            "daily_habits": [],
+            "weekly_goals": [],
+            "lifestyle_changes": []
+        })
+
+        # FIXED: Map gender properly for database storage
         gender_map = {
             "male": "male",
             "female": "female", 
@@ -29,34 +59,7 @@ def checkin():
         }
         gender_val = gender_map.get(data.get("gender", "prefer-not-to-say"), "prefer-not-to-say")
 
-        # FIXED CODE:
-        prediction_data = {
-            "age": int(data.get("age", 19)),
-            "stress_level": float(data.get("stress_level", 5)),
-            "sleep_hours": float(data.get("sleep_hours", 7)),
-            "sociability": float(data.get("sociability", 5)),
-            "anxiety": float(data.get("anxiety", 5)),
-            "emotional_stability": float(data.get("emotional_stability", 5)),
-            "self_esteem": float(data.get("self_esteem", 5)),
-            "motivation": float(data.get("motivation", 5)),
-            "eating_habits": float(data.get("eating_habits", 5))
-        }
-
-        
-        print(f"Prediction data: {prediction_data}")
-
-        prediction_result = predict_mood(prediction_data)
-        
-        # Ensure all required fields exist with safe defaults
-        predicted_tags = prediction_result.get("tags", [])
-        confidence = prediction_result.get("confidence", "low")
-        direct_actions = prediction_result.get("direct_actions", {
-            "immediate_steps": [],
-            "daily_habits": [],
-            "weekly_goals": [],
-            "lifestyle_changes": []
-        })
-
+        # Save to database with all fields
         checkin_data = {
             "user_id": session["user_id"],
             "age": int(data.get("age", 19)),
@@ -80,7 +83,6 @@ def checkin():
         return jsonify({
             "message": "Check-in saved successfully", 
             "predicted_tags": predicted_tags,
-            "confidence": confidence,
             "direct_actions": direct_actions,
             "checkin_id": result.data[0]["id"] if result.data else None
         })
@@ -108,8 +110,10 @@ def get_action_plan(checkin_id):
 
         checkin = result.data[0]
         
+        # FIXED: Include ALL features for complete prediction
         input_data = {
             "age": checkin["age"],
+            "gender": checkin.get("gender", "prefer-not-to-say"),
             "stress_level": checkin["stress_level"],
             "sleep_hours": checkin["sleep_hours"],
             "sociability": checkin["sociability"],
@@ -117,14 +121,16 @@ def get_action_plan(checkin_id):
             "emotional_stability": checkin["emotional_stability"],
             "self_esteem": checkin["self_esteem"],
             "motivation": checkin["motivation"],
-            "eating_habits": checkin["eating_habits"]
+            "eating_habits": checkin["eating_habits"],
+            "substance_abuse": checkin.get("substance_abuse", 0),
+            "journal_entry": checkin.get("journal_entry", "")
         }
 
+        # Get fresh AI prediction with complete data
         prediction = predict_mood(input_data)
         
         return jsonify({
             "tags": checkin["diagnosis_tags"],
-            "confidence": checkin.get("confidence_score", "moderate"),
             "direct_actions": prediction.get("direct_actions", {}),
             "timestamp": checkin["timestamp"]
         })
@@ -156,7 +162,18 @@ def history():
                 mood["diagnosis_tags"] = []
             
             mood["mental_state"] = mood["diagnosis_tags"][0] if mood["diagnosis_tags"] else "Unknown"
-            mood["suggestions"] = mood["diagnosis_tags"]
+            
+            # UPDATED: Handle AI suggestions properly
+            suggestions = mood.get("suggestions")
+            if isinstance(suggestions, dict):
+                # AI suggestions format - flatten for backward compatibility
+                all_suggestions = []
+                for category, items in suggestions.items():
+                    if isinstance(items, list):
+                        all_suggestions.extend(items)
+                mood["suggestions"] = all_suggestions
+            elif not suggestions:
+                mood["suggestions"] = mood["diagnosis_tags"]  # Fallback
             
             if isinstance(mood["timestamp"], str):
                 dt = datetime.fromisoformat(mood["timestamp"].replace("Z", "+00:00"))
@@ -198,8 +215,10 @@ def predict():
     try:
         data = request.get_json()
         
+        # FIXED: Include ALL features for complete prediction
         prediction_data = {
             "age": data.get("age", 19),
+            "gender": data.get("gender", "prefer-not-to-say"),
             "stress_level": data.get("stress_level", 5),
             "sleep_hours": data.get("sleep_hours", 7),
             "sociability": data.get("sociability", 5),
@@ -207,7 +226,9 @@ def predict():
             "emotional_stability": data.get("emotional_stability", 5),
             "self_esteem": data.get("self_esteem", 5),
             "motivation": data.get("motivation", 5),
-            "eating_habits": data.get("eating_habits", 5)
+            "eating_habits": data.get("eating_habits", 5),
+            "substance_abuse": data.get("substance_abuse", 0),
+            "journal_entry": data.get("journal_entry", "")
         }
         
         prediction = predict_mood(prediction_data)
@@ -233,16 +254,13 @@ def get_stats():
         
         from collections import Counter
         
-        intervention_counts = Counter(mood.get("intervention_level", "monitoring") for mood in moods)
-        confidence_counts = Counter(mood.get("confidence_score", "moderate") for mood in moods)
-        
         tag_counts = Counter()
         for mood in moods:
             if mood.get("diagnosis_tags"):
                 for tag in mood["diagnosis_tags"]:
                     tag_counts[tag] += 1
         
-        recent_trends = []
+        recent_trends = {}
         if len(moods) >= 5:
             recent_moods = moods[:5]
             stress_trend = [m.get("stress_level", 5) for m in recent_moods]
@@ -257,7 +275,6 @@ def get_stats():
         
         return jsonify({
             "total_checkins": len(moods),
-            "confidence_distribution": dict(confidence_counts),
             "top_conditions": dict(tag_counts.most_common(5)),
             "recent_trends": recent_trends,
             "last_checkin": moods[0]["timestamp"] if moods else None

@@ -713,17 +713,16 @@
                         <div class="form-group mood-question">
                             <label for="substance_abuse">
                                 <span class="emoji-mood">🚫</span>
-                                How often have you used substances recently?
+                                Do you abuse any substances?
                             </label>
                             <div class="rating-container">
-                                <input type="range" id="substance_abuse" name="substance_abuse" min="0" max="10" value="1" class="rating-slider" />
+                                <input type="range" id="substance_abuse" name="substance_abuse" min="0" max="1" value="1" class="rating-slider" />
                                 <div class="rating-display">
                                     <span class="rating-value" id="substance_abuse_value">1</span>
                                 </div>
                                 <div class="rating-labels">
-                                    <span>None</span>
-                                    <span>Occasional</span>
-                                    <span>Frequent</span>
+                                    <span>No</span>
+                                    <span>Yes</span>
                                 </div>
                             </div>
                         </div>
@@ -874,9 +873,6 @@
                             tagDiv.style.marginBottom = "22px";
                             tagDiv.innerHTML = `
                                 <span class="tag" style="font-size:1.1em;">${tag}</span>
-                                <div style="margin:6px 0 0 0; color:#6366f1; font-weight:500;">
-                                    Mental health condition detected by AI analysis.
-                                </div>
                             `;
                             statesWithInfo.appendChild(tagDiv);
                         });

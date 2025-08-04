@@ -1,7 +1,7 @@
 {
   "features": [
-    "substance_abuse",
     "age",
+    "gender",
     "stress_level",
     "sleep_hours",
     "sociability",
@@ -9,7 +9,8 @@
     "emotional_stability",
     "self_esteem",
     "motivation",
-    "eating_habits"
+    "eating_habits",
+    "substance_abuse"
   ],
   "tag_names": [
     "Addiction",
@@ -48,19 +49,14 @@
     "Substance Dependence": 0.7
   },
   "model_performance": {
-    "cv_f1_mean": 0.5340420190067536,
-    "cv_f1_std": 0.0004945147259247223,
-    "hamming_loss": 0.0363625,
-    "subset_accuracy": 0.584225
+    "cv_f1_mean": 0.6574632064475854,
+    "cv_f1_std": 0.0005870288629107436,
+    "hamming_loss": 0.0223328125,
+    "subset_accuracy": 0.66875
   },
   "preprocessing": {
     "scaler": "RobustScaler",
-    "removed_features": [
-      "gender"
-    ],
-    "essential_features": [
-      "substance_abuse"
-    ],
+    "removed_features": [],
     "variance_threshold": 0.01,
     "substance_abuse_included": true
   },
@@ -69,6 +65,6 @@
     "n_estimators": 300,
     "max_depth": 20,
     "class_weight": "balanced",
-    "training_date": "2025-07-19T10:46:27.519124"
+    "training_date": "2025-08-03T21:45:41.386458"
   }
 }
