@@ -1,0 +1,687 @@
+{% extends "base.html" %}
+{% block title %}AI Mental Health Chat - MindMentor{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+.chatbot-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    padding: 20px;
+}
+
+.chat-interface {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Chat Header */
+.chat-header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.chat-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.chat-subtitle {
+    opacity: 0.9;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.chat-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+/* Chat Messages Area */
+.chat-messages {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    max-height: 500px;
+    min-height: 400px;
+    background: #f8fafc;
+}
+
+.message {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+.message.user {
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.message.user .message-avatar {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.message.bot .message-avatar {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 1rem 1.5rem;
+    border-radius: 18px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.message.user .message-content {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-bottom-right-radius: 6px;
+}
+
+.message.bot .message-content {
+    background: white;
+    color: #1a202c;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: none;
+    padding: 1rem 1.5rem;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    border-bottom-left-radius: 6px;
+    margin-bottom: 1.5rem;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #9ca3af;
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+/* Chat Input */
+.chat-input-area {
+    padding: 2rem;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+}
+
+.input-container {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 25px;
+    font-size: 1rem;
+    resize: none;
+    max-height: 120px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.send-button {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.send-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.send-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Conversation Starters */
+.conversation-starters {
+    padding: 1rem 2rem 0;
+    background: white;
+}
+
+.starters-title {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.starters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.starter-button {
+    padding: 0.75rem 1rem;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    text-align: left;
+    color: #4a5568;
+}
+
+.starter-button:hover {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+    transform: translateY(-1px);
+}
+
+/* Crisis Resources */
+.crisis-resources {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.crisis-title {
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.crisis-resources a {
+    color: #d97706;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.crisis-resources a:hover {
+    text-decoration: underline;
+}
+
+/* Coping Suggestions */
+.coping-suggestions {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.coping-title {
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 0.5rem;
+}
+
+.coping-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.coping-list li {
+    padding: 0.25rem 0;
+    color: #1e3a8a;
+}
+
+.coping-list li:before {
+    content: "💡 ";
+    margin-right: 0.5rem;
+}
+
+/* Chat Controls */
+.chat-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.control-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    color: #64748b;
+}
+
+.control-button:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e0;
+}
+
+/* Animations */
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes typingBounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+    }
+    40% {
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .chatbot-container {
+        padding: 10px;
+    }
+    
+    .chat-header {
+        padding: 1.5rem;
+    }
+    
+    .chat-title {
+        font-size: 1.5rem;
+    }
+    
+    .chat-messages {
+        padding: 1rem;
+        max-height: 400px;
+    }
+    
+    .message-content {
+        max-width: 85%;
+    }
+    
+    .chat-input-area {
+        padding: 1rem;
+    }
+    
+    .starters-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chatbot-container">
+    <div class="chat-interface">
+        <!-- Chat Header -->
+        <div class="chat-header">
+            <h1 class="chat-title">
+                <span class="chat-icon">🤖</span>
+                MindMentor AI
+            </h1>
+            <p class="chat-subtitle">Your compassionate mental health companion</p>
+            <div class="chat-status">
+                <div class="status-indicator"></div>
+                <span>AI Assistant Online</span>
+            </div>
+        </div>
+        
+        <!-- Chat Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome Message -->
+            <div class="message bot">
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="message-text">
+                        Hello {{ username }}! 👋 I'm your MindMentor AI companion. I'm here to provide a safe, 
+                        supportive space for you to share your thoughts and feelings. How are you doing today?
+                    </div>
+                    <div class="message-time">Just now</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Conversation Starters -->
+        <div class="conversation-starters" id="conversationStarters">
+            <div class="starters-title">💭 Quick conversation starters:</div>
+            <div class="starters-grid">
+                {% for starter in conversation_starters[:4] %}
+                <button class="starter-button" onclick="sendMessage('{{ starter }}')">
+                    {{ starter }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Typing Indicator -->
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-area">
+            <div class="input-container">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="Share what's on your mind..."
+                    rows="1"
+                    maxlength="1000"></textarea>
+                <button id="sendButton" class="send-button" onclick="sendUserMessage()">
+                    <span>📤</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Chat Controls -->
+        <div class="chat-controls">
+            <button class="control-button" onclick="clearChat()">
+                🗑️ Clear Chat
+            </button>
+            <button class="control-button" onclick="exportChat()">
+                💾 Export Chat
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Chat functionality
+let isWaitingForResponse = false;
+
+// Auto-resize textarea
+document.getElementById('chatInput').addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// Send message on Enter (but not Shift+Enter)
+document.getElementById('chatInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendUserMessage();
+    }
+});
+
+// Send user message
+async function sendUserMessage() {
+    const input = document.getElementById('chatInput');
+    const message = input.value.trim();
+    
+    if (!message || isWaitingForResponse) return;
+    
+    // Clear input and hide starters
+    input.value = '';
+    input.style.height = 'auto';
+    hideConversationStarters();
+    
+    // Add user message to chat
+    addMessage(message, 'user');
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    try {
+        const response = await fetch('/chatbot/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message: message })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Add AI response
+            addMessage(data.message, 'bot', data);
+        } else {
+            // Show fallback message
+            addMessage(data.fallback_message || 'Sorry, I encountered an error. Please try again.', 'bot');
+        }
+        
+    } catch (error) {
+        console.error('Chat error:', error);
+        addMessage('I\'m having trouble connecting right now. Please try again in a moment.', 'bot');
+    } finally {
+        hideTypingIndicator();
+    }
+}
+
+// Quick send message (from starter buttons)
+function sendMessage(message) {
+    document.getElementById('chatInput').value = message;
+    sendUserMessage();
+}
+
+// Add message to chat
+function addMessage(text, sender, metadata = {}) {
+    const messagesContainer = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}`;
+    
+    const avatar = sender === 'user' ? '👤' : '🤖';
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    let messageContent = `
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-content">
+            <div class="message-text">${text}</div>
+            <div class="message-time">${time}</div>
+    `;
+    
+    // Add crisis resources if provided
+    if (metadata.crisis_resources) {
+        messageContent += `
+            <div class="crisis-resources">
+                <div class="crisis-title">🚨 Crisis Support Available</div>
+                <p>If you're in crisis, please reach out:</p>
+                <p>📞 <a href="tel:+91-98204-66726">Call +91-98204-66726 for 24/7 confidential support for emotional distress and suicide prevention</a></p>
+                <p>💬 <a href="sms:+91-99996-66555">Text +91-99996-66555 on WhatsApp</a></p>
+                <p>🚨 <a href="tel:108">Call 108 for emergencies</a></p>
+            </div>
+        `;
+    }
+    
+    // Add coping suggestions if provided
+    if (metadata.coping_suggestions && metadata.coping_suggestions.length > 0) {
+        messageContent += `
+            <div class="coping-suggestions">
+                <div class="coping-title">💡 Coping Strategies</div>
+                <ul class="coping-list">
+                    ${metadata.coping_suggestions.map(suggestion => `<li>${suggestion}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    messageContent += '</div>';
+    messageDiv.innerHTML = messageContent;
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Show/hide typing indicator
+function showTypingIndicator() {
+    isWaitingForResponse = true;
+    document.getElementById('typingIndicator').style.display = 'block';
+    document.getElementById('sendButton').disabled = true;
+    scrollToBottom();
+}
+
+function hideTypingIndicator() {
+    isWaitingForResponse = false;
+    document.getElementById('typingIndicator').style.display = 'none';
+    document.getElementById('sendButton').disabled = false;
+}
+
+// Hide conversation starters after first message
+function hideConversationStarters() {
+    const starters = document.getElementById('conversationStarters');
+    starters.style.display = 'none';
+}
+
+// Scroll to bottom
+function scrollToBottom() {
+    const messagesContainer = document.getElementById('chatMessages');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Clear chat
+async function clearChat() {
+    if (confirm('Are you sure you want to clear the chat history? This cannot be undone.')) {
+        try {
+            const response = await fetch('/chatbot/api/chat/clear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (response.ok) {
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="message bot">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            <div class="message-text">Chat history cleared. How can I help you today?</div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('conversationStarters').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Clear chat error:', error);
+            alert('Failed to clear chat history.');
+        }
+    }
+}
+
+// Export chat
+async function exportChat() {
+    try {
+        const response = await fetch('/chatbot/api/chat/export');
+        const data = await response.json();
+        
+        if (data.success) {
+            const blob = new Blob([JSON.stringify(data.conversation, null, 2)], 
+                                  { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mindmentor-chat-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    } catch (error) {
+        console.error('Export chat error:', error);
+        alert('Failed to export chat history.');
+    }
+}
+
+// Initialize chat
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('chatInput').focus();
+});
+</script>
+{% endblock %}
