@@ -8,7 +8,8 @@ from utils.supabase_client import supabase  # Use single shared client
 from datetime import datetime, timedelta
 from collections import Counter
 import random
-
+from flask import jsonify
+import json
 
 # Setup paths
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -77,23 +78,29 @@ def calculate_streak(mood_entries):
     return streak
 
 
+from flask import render_template, session, redirect, url_for
+from datetime import datetime
+import random
+from collections import Counter
+
 @app.route("/dashboard")
 def dashboard():
     if "user_id" not in session:
         return redirect(url_for("auth.login"))
+
     QUOTES = [
-    "Your mental health is a priority. Your happiness is essential. Your self-care is a necessity.",
-    "Take a deep breath. You’re doing better than you think.",
-    "Every emotion is valid. You’re allowed to feel what you feel.",
-    "Small steps every day. That’s the secret to long-term progress.",
-    "Rest is productive too. 💙",
-    "You are more than your bad days.",
-    "Keep going. Your future self is cheering for you.",
-    "It’s okay to not be okay. Just don’t stay there."
+        "Your mental health is a priority. Your happiness is essential. Your self-care is a necessity.",
+        "Take a deep breath. You’re doing better than you think.",
+        "Every emotion is valid. You’re allowed to feel what you feel.",
+        "Small steps every day. That’s the secret to long-term progress.",
+        "Rest is productive too. 💙",
+        "You are more than your bad days.",
+        "Keep going. Your future self is cheering for you.",
+        "It’s okay to not be okay. Just don’t stay there."
     ]
 
-    
     daily_quote = random.choice(QUOTES)
+
     try:
         result = supabase.table("mood_checkins") \
                          .select("*") \
@@ -102,54 +109,50 @@ def dashboard():
                          .execute()
 
         moods = result.data or []
-        
-    
-        # Convert timestamp string to datetime object if needed
+
         for mood in moods:
-
-    # Convert timestamp
-            if isinstance(mood["timestamp"], str):
+            # ✅ Fix timestamp
+            if isinstance(mood.get("timestamp"), str):
                 mood["timestamp"] = datetime.fromisoformat(mood["timestamp"].replace("Z", "+00:00"))
-        
-    # ✅ Force suggestions to be a list
-            if isinstance(mood.get("suggestions"), str):
-                mood["suggestions"] = mood["suggestions"].strip("{}").split(",")
-            elif mood.get("suggestions") is None:
-                mood["suggestions"] = []
 
-            ts=mood.get("timestamps")
+            ts = mood.get("timestamp")
             if not ts:
                 continue
-            try:
-                if isinstance(ts, str):
-                    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                else:
-                    dt = ts  # Already a datetime object
 
+            try:
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00")) if isinstance(ts, str) else ts
                 mood["timestamp_obj"] = dt
                 mood["timestamp_display"] = dt.strftime("%b %d, %Y at %I:%M %p")
                 mood["timestamp_day"] = dt.strftime("%a")
-
             except Exception as e:
                 print("⚠️ Timestamp parsing error:", ts, str(e))
                 mood["timestamp_display"] = "Unknown"
                 mood["timestamp_day"] = "N/A"
                 mood["timestamp_obj"] = None
 
-            # Parse suggestions into list if needed
+            # ✅ Fix suggestions list
             if isinstance(mood.get("suggestions"), str):
                 mood["suggestions"] = mood["suggestions"].strip("{}").split(",")
             elif mood.get("suggestions") is None:
                 mood["suggestions"] = []
-        
-        
-        last_mood = moods[0] if moods else None
-        
-        mood_counts = Counter(m["mental_state"] for m in moods if m.get("mental_state"))
 
-# Convert to a list of (mood, count) tuples
+            # ✅ Fix diagnosis_tags
+            tags = mood.get("diagnosis_tags")
+            if tags is None:
+             mood["diagnosis_tags"] = []
+            elif isinstance(tags, str):
+                try:
+        # Handle both JSON strings and comma-separated strings
+                    mood["diagnosis_tags"] = json.loads(tags) if tags.startswith('[') else tags.split(',')
+                except:
+                    mood["diagnosis_tags"] = [tags]  # Fallback to single tag
+            elif not isinstance(tags, list):
+                mood["diagnosis_tags"] = [str(tags)]  # Convert non-list to list
+
+        last_mood = moods[0] if moods else None
+        mood_counts = Counter(tag for m in moods for tag in m.get("diagnosis_tags", []))
         mood_summary = [{"mood": mood, "count": count} for mood, count in mood_counts.items()]
-        
+
         hour = datetime.now().hour
         if hour < 12:
             greeting = "Good morning ☀️"
@@ -158,30 +161,21 @@ def dashboard():
         else:
             greeting = "Good evening 🌙"
 
-
         return render_template(
             "dashboard.html",
             username=session.get("username", "User"),
             greeting=greeting,
             last_mood=last_mood,
             moods=moods,
-            streak = calculate_streak(moods),
+            streak=calculate_streak(moods),
             mood_summary=mood_summary,
             quote=daily_quote
         )
-    
-        return render_template(
-            "dashboard.html",
-            username=session.get("username", "User"),
-            last_mood=last_mood,
-            moods=moods,
-            streak=streak
-        )
-    
 
     except Exception as e:
         print("Dashboard error:", str(e))
         return render_template("dashboard.html", username=session.get("username", "User"), moods=[], last_mood=None, streak=0)
+
 
 
 @app.route('/delete_mood/<mood_id>', methods=['DELETE'])

@@ -181,53 +181,82 @@
     {% endif %}
 
     {% if last_mood %}
-    <div class="last-mood">
-      <h3>🧠 Last Mood Check-in</h3>
-      <p><strong>Mood:</strong> {{ last_mood.mental_state or "N/A" }}</p>
-      {% if last_mood.journal_entry %}
-        <p><strong>Journal Entry:</strong></p>
-        <blockquote>{{ last_mood.journal_entry }}</blockquote>
-      {% endif %}
-      <ul>
-        {% for tip in last_mood.suggestions %}
-        <li>{{ tip }}</li>
-        {% endfor %}
-      </ul>
-    </div>
+<div class="last-mood">
+  <h3>🧠 Last Mood Check-in</h3>
+  <p><strong>Mood:</strong>
+    {% if last_mood.diagnosis_tags %}
+      {{ last_mood.diagnosis_tags | join(", ") }}
     {% else %}
-    <p>No mood check-ins yet. Let's do your first one! 📝</p>
+      N/A
     {% endif %}
+  </p>
 
-    <div class="actions">
-      <a href="/mood-tracker">Add Mood Check-in</a>
-      <a href="/logout">Logout</a>
+  {% if last_mood.diagnosis_tags %}
+    <div>
+      {% for tag in last_mood.diagnosis_tags %}
+        <span class="tag">{{ tag }}</span>
+      {% endfor %}
     </div>
+  {% endif %}
+
+  {% if last_mood.journal_entry %}
+    <p><strong>Journal Entry:</strong></p>
+    <blockquote>{{ last_mood.journal_entry }}</blockquote>
+  {% endif %}
+
+  <ul>
+    {% for tip in last_mood.suggestions %}
+      <li>{{ tip }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% else %}
+<p>No mood check-ins yet. Let's do your first one! 📝</p>
+{% endif %}
+
+<div class="actions">
+  <a href="/mood-tracker">Add Mood Check-in</a>
+  <a href="/logout">Logout</a>
+</div>
 
 <div id="moodHistoryBanner" style="cursor: pointer; background: #e0f2fe; padding: 1rem; border-radius: 8px; margin-top: 2rem;">
   <h3>📅 Your Mood History (click to expand)</h3>
 </div>
 
 <!-- Mood History Content -->
-<!-- Mood History Content -->
 <div id="moodHistoryContent" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
   {% if moods %}
     {% for mood in moods %}
     <div class="mood-entry" data-id="{{ mood.id }}" style="margin: 1rem 0; padding: 1rem; background: #f1f5f9; border-left: 4px solid #6366f1; border-radius: 6px; position: relative;">
-      <!-- Mood Content -->
-      <p><strong>Mood:</strong> {{ mood.mental_state }}</p>
-      <p><strong>Time:</strong> 
-        {% if mood.timestamp_display %} 
-          {{ mood.timestamp_display }} 
+      <p><strong>Mood:</strong>
+        {% if mood.diagnosis_tags %}
+          {{ mood.diagnosis_tags | join(", ") }}
+        {% else %}
+          N/A
+        {% endif %}
+      </p>
+
+      {% if mood.diagnosis_tags %}
+        <div style="margin: 0.5rem 0;">
+          {% for tag in mood.diagnosis_tags %}
+            <span class="tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <p><strong>Time:</strong>
+        {% if mood.timestamp_display %}
+          {{ mood.timestamp_display }}
         {% else %}
           {{ mood.timestamp.strftime('%b %d, %Y %I:%M %p') if mood.timestamp and not mood.timestamp is string else mood.timestamp }}
         {% endif %}
       </p>
+
       {% if mood.journal_entry %}
         <p><em>Journal:</em> {{ mood.journal_entry }}</p>
       {% endif %}
-      
-      <!-- Delete Button -->
-      <button class="delete-mood-btn" 
+
+      <button class="delete-mood-btn"
               style="position: absolute; top: 0.5rem; right: 0.5rem; background: #fee2e2; color: #b91c1c; border: none; padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer;">
         🗑️
       </button>
@@ -237,8 +266,8 @@
     <p style="padding: 1rem;">No mood history yet.</p>
   {% endif %}
 </div>
-<!-- Mood Summary Section -->
-<!-- Mood Summary Section -->
+
+<!-- Mood Summary -->
 {% if mood_summary %}
 <div class="mood-summary">
   <h3 id="toggle-summary" style="cursor: pointer; color: #6366f1;">
@@ -248,7 +277,7 @@
     <ul>
       {% for item in mood_summary %}
         <li>
-          <strong>{{ item.mood }}</strong> 
+          <strong>{{ item.mood }}</strong>
           <span style="color: #64748b;">({{ item.count }} check-in{{ 's' if item.count > 1 else '' }})</span>
         </li>
       {% endfor %}
@@ -257,36 +286,19 @@
 </div>
 {% endif %}
 
+<!-- Floating Journal Form -->
+<form id="journalForm" class="journal-floating" method="POST" action="/api/mood/journal">
+  <textarea name="journal_entry" placeholder="📝 Write your thoughts..." required></textarea>
+  <button type="submit">Save Entry</button>
+</form>
 
-  <form id="journalForm" class="journal-floating" method="POST" action="/api/mood/journal">
-    <textarea name="journal_entry" placeholder="📝 Write your thoughts..." required></textarea>
-    <button type="submit">Save Entry</button>
-  </form>
+<!-- Mood Chart -->
+<div class="mood-chart-section">
+  <h3>📈 Mood Trend</h3>
+  <canvas id="moodChart" height="120"></canvas>
+</div>
 
-  <div id="moodHistoryDrawer" aria-hidden="true">
-    <button id="closeDrawerBtn">✖️</button>
-    <h3 style="margin-top: 2rem;">Your Mood History</h3>
-    {% if moods %}
-      {% for mood in moods %}
-      <div style="margin-bottom: 1rem; padding: 0.5rem; border-left: 4px solid #6366f1; background: #f1f5f9; border-radius: 6px;">
-        <p><strong>Mood:</strong> {{ mood.mental_state }}</p>
-        <p><strong>Time:</strong> {{ mood.timestamp }}</p>
-        {% if mood.journal_entry %}
-          <p><strong>Journal:</strong> {{ mood.journal_entry }}</p>
-        {% endif %}
-        <p>ID: {{ mood.id or "No ID found" }}</p>
 
-        <button class="delete-btn" data-id="{{ mood.id }}" title="Delete this entry">🗑️</button>
-      </div>
-      {% endfor %}
-    {% else %}
-      <p>No mood history yet.</p>
-    {% endif %}
-    
-  </div>
-  <div class="mood-chart-section">
-   <h3>📈 Mood Trend</h3>
-   <canvas id="moodChart" height="120"></canvas>
    <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
