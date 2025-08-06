@@ -48,8 +48,10 @@
                             <div class="user-card-header">
                                 <div class="user-avatar">
                                     <img src="{{ user.avatar_url or '/static/images/default-avatar.png' }}" 
-                                         alt="{{ user.username }}'s avatar"
-                                         class="avatar-img">
+     alt="{{ user.username or 'User' }}'s avatar"
+     onerror="this.src='/static/images/default-avatar.png'; this.onerror=null;"
+     class="user-avatar-img">
+
                                     {% if user.is_online %}
                                     <div class="online-indicator"></div>
                                     {% endif %}

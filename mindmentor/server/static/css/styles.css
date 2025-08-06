@@ -1,3 +1,104 @@
+/* Critical CSS that should load first */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --warning-color: #f59e0b;
+    --text-primary: #1a202c;
+    --text-secondary: #64748b;
+    --bg-primary: #f7fafc;
+    --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+/* Base styles */
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* Common button styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Toast notifications */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    margin-bottom: 10px;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.toast-success { background: var(--success-color); }
+.toast-error { background: var(--error-color); }
+.toast-info { background: var(--primary-gradient); }
+
+/* Card components */
+.card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.card-content {
+    padding: 1.5rem;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    .page-container {
+        padding: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 /* ===== EXISTING STYLES (keep these) ===== */
 .auth-container {
   max-width: 420px;
@@ -2251,4 +2352,62 @@ body {
   border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+/* Complete Enhanced Chatbot Button Styles */
+.chatbot-nav-item {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+    border-left: 3px solid #10b981;
+    position: relative;
+    overflow: hidden;
+}
+
+.chatbot-nav-item:hover {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    transform: translateX(4px);
+}
+
+.chatbot-nav-item.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.chatbot-nav-item .nav-icon {
+    animation: chatbotPulse 3s infinite;
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+}
+
+.chatbot-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: badgeBounce 2s infinite;
+}
+
+@keyframes chatbotPulse {
+    0%, 100% { 
+        transform: scale(1);
+        filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+    }
+    50% { 
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
+    }
+}
+
+@keyframes badgeBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Hide badge after user visits chat */
+.chatbot-nav-item.visited .chatbot-badge {
+    display: none;
 }

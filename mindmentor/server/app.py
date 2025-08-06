@@ -13,6 +13,7 @@ import random
 from dateutil import parser
 from flask import make_response, jsonify
 from helpers import export_user_data
+from routes.chatbot.chatbot_routes import chatbot_bp
 from helpers import (
     get_user_profile_data,
     get_user_mood_stats,
@@ -24,6 +25,8 @@ from helpers import (
     calculate_improvements,
     get_weekly_activity
 )
+
+
 # Setup paths
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -36,6 +39,7 @@ load_dotenv()
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")  # store securely in prod
 CORS(app)
+
 
 # Import blueprints after app creation
 from routes.auth_routes import auth_bp
@@ -50,6 +54,7 @@ app.register_blueprint(mood_bp, url_prefix="/api/mood")
 app.register_blueprint(suggestion_bp, url_prefix="/api/suggestions")
 app.register_blueprint(help_bp)
 app.register_blueprint(checkin_bp)
+app.register_blueprint(chatbot_bp, url_prefix="/chatbot")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # UPDATED: Enhanced tag meanings for all conditions including substance-related ones
@@ -396,7 +401,6 @@ def get_chart_data():
 def dashboard():
     # Check authentication with fallback to multiple redirect targets
     if "user_id" not in session:
-        # Try both auth blueprint and direct login page
         try:
             return redirect(url_for("auth.login"))
         except:
@@ -415,14 +419,15 @@ def dashboard():
     ]
     daily_quote = random.choice(QUOTES)
     
-    # 🔧 NEW: Get time range parameter for chart filtering
-    time_range = request.args.get('range', '30')
+    # 🔧 Get time range parameter for chart filtering
+    time_range = request.args.get('range', '30')  # ← This is Flask's request object
+    user_id = session["user_id"]
     
     try:
         # Fetch mood data
         result = supabase.table("mood_checkins") \
                          .select("*") \
-                         .eq("user_id", session["user_id"]) \
+                         .eq("user_id", user_id) \
                          .order("timestamp", desc=True) \
                          .execute()
         moods = result.data or []
@@ -433,17 +438,59 @@ def dashboard():
         # Get last mood
         last_mood = moods[0] if moods else None
         
-        # Calculate mood summary (using both diagnosis_tags and mental_state)
+        # Calculate mood summary
         mood_counts = Counter()
         for m in moods:
-            # Count by diagnosis_tags
             for tag in m.get("diagnosis_tags", []):
                 mood_counts[tag] += 1
-            # Also count by mental_state for backward compatibility
             if m.get("mental_state") and m.get("mental_state") != "Unknown":
                 mood_counts[m["mental_state"]] += 1
         
         mood_summary = [{"mood": mood, "count": count} for mood, count in mood_counts.items()]
+        
+        # 🔔 Check for pending friend requests
+        friend_requests = []
+        show_friend_notification = False
+        
+        try:
+            pending_requests_result = supabase.table('friends')\
+                .select('*')\
+                .eq('addressee_id', user_id)\
+                .eq('status', 'pending')\
+                .execute()
+            
+            pending_requests = pending_requests_result.data or []
+            print(f"🔔 Found {len(pending_requests)} pending friend requests for user {user_id}")
+            
+            # 🔧 FIXED: Changed variable name from 'request' to 'friend_request'
+            for friend_request in pending_requests:  # ← Changed variable name
+                try:
+                    requester_profile = supabase.table('profiles')\
+                        .select('username, full_name, avatar_url')\
+                        .eq('id', friend_request['requester_id'])\
+                        .single()\
+                        .execute()
+                    
+                    if requester_profile.data:
+                        friend_request['requester'] = requester_profile.data  # ← Using friend_request
+                        friend_requests.append(friend_request)  # ← Using friend_request
+                        print(f"✅ Added friend request from: {requester_profile.data.get('username', 'Unknown')}")
+                    else:
+                        print(f"❌ No profile found for requester: {friend_request['requester_id']}")
+                        friend_request['requester'] = {'username': 'Unknown User', 'full_name': 'Unknown User', 'avatar_url': None}
+                        friend_requests.append(friend_request)
+                        
+                except Exception as profile_error:
+                    print(f"❌ Error fetching requester profile: {str(profile_error)}")
+                    friend_request['requester'] = {'username': 'Unknown User', 'full_name': 'Unknown User', 'avatar_url': None}
+                    friend_requests.append(friend_request)
+            
+            show_friend_notification = len(friend_requests) > 0
+            
+        except Exception as friend_error:
+            print(f"❌ Error fetching friend requests: {str(friend_error)}")
+            friend_requests = []
+            show_friend_notification = False
         
         # Enhanced greeting with emojis
         hour = datetime.now().hour
@@ -466,12 +513,16 @@ def dashboard():
             insights=analytics['insights'],
             weekly_mood_trend=analytics['weekly_mood_trend'],
             weekly_mood_data=analytics['weekly_mood_data'],
-            time_range=time_range  # 🔧 NEW: Pass time range to template
+            time_range=time_range,
+            friend_requests=friend_requests,
+            show_friend_notification=show_friend_notification
         )
         
     except Exception as e:
-        print(f"Dashboard error: {str(e)}")
-        # Return safe fallback with all required template variables
+        print(f"❌ Dashboard error: {str(e)}")
+        import traceback
+        print(f"📋 Full traceback: {traceback.format_exc()}")
+        
         return render_template(
             "dashboard.html",
             username=session.get("username", "User"),
@@ -484,8 +535,11 @@ def dashboard():
             insights=[],
             weekly_mood_trend={},
             weekly_mood_data=[],
-            time_range=time_range  # 🔧 NEW: Pass time range to template
+            time_range=time_range,
+            friend_requests=[],
+            show_friend_notification=False
         )
+
 
 @app.route("/profile")
 def profile():
@@ -526,7 +580,7 @@ def profile():
     )
 
 @app.route("/discover")
-def discover_users():
+def discover():
     if "user_id" not in session:
         return redirect(url_for("login_page"))
     
@@ -718,30 +772,104 @@ def friends_list():
     user_id = session['user_id']
     
     try:
-        # Get all friend relationships
+        print(f"🔍 Looking for friends for user_id: {user_id}")
+        
+        # Get friend relationships for current user
         friends_result = supabase.table('friends')\
-            .select('*, requester:requester_id(username, full_name, avatar_url), addressee:addressee_id(username, full_name, avatar_url)')\
+            .select('*')\
             .or_(f'requester_id.eq.{user_id},addressee_id.eq.{user_id}')\
             .execute()
         
+        print(f"📊 Raw friends query result: {friends_result.data}")
+        
         relationships = friends_result.data or []
         
-        # Categorize relationships
+        # Initialize lists
         friends = []
         sent_requests = []
         received_requests = []
         
         for rel in relationships:
+            print(f"🔄 Processing relationship: {rel}")
+            
             if rel['status'] == 'accepted':
-                # Determine which profile to show
-                friend_profile = rel['addressee'] if rel['requester_id'] == user_id else rel['requester']
-                friend_profile['user_id'] = rel['addressee_id'] if rel['requester_id'] == user_id else rel['requester_id']
-                friends.append(friend_profile)
+                # Determine which user ID to fetch (the OTHER user)
+                other_user_id = rel['addressee_id'] if rel['requester_id'] == user_id else rel['requester_id']
+                
+                print(f"👤 Fetching friend profile for user: {other_user_id}")
+                
+                # Fetch the other user's profile
+                try:
+                    profile_result = supabase.table('profiles')\
+                        .select('*')\
+                        .eq('id', other_user_id)\
+                        .single()\
+                        .execute()
+                    
+                    if profile_result.data:
+                        friend_profile = profile_result.data.copy()
+                        friend_profile['user_id'] = other_user_id
+                        friends.append(friend_profile)
+                        print(f"✅ Added friend: {friend_profile.get('username', 'Unknown')}")
+                    else:
+                        print(f"❌ No profile found for user: {other_user_id}")
+                        
+                except Exception as e:
+                    print(f"❌ Error fetching friend profile {other_user_id}: {str(e)}")
+                    
             elif rel['status'] == 'pending':
                 if rel['requester_id'] == user_id:
-                    sent_requests.append({**rel, 'profile': rel['addressee']})
+                    # User sent this request - get addressee profile
+                    print(f"📤 Processing sent request to: {rel['addressee_id']}")
+                    
+                    try:
+                        profile_result = supabase.table('profiles')\
+                            .select('*')\
+                            .eq('id', rel['addressee_id'])\
+                            .single()\
+                            .execute()
+                        
+                        if profile_result.data:
+                            sent_requests.append({
+                                'id': rel['id'],
+                                'profile': profile_result.data,
+                                'created_at': rel['created_at']
+                            })
+                            print(f"✅ Added sent request to: {profile_result.data.get('username', 'Unknown')}")
+                        else:
+                            print(f"❌ No profile found for sent request: {rel['addressee_id']}")
+                            
+                    except Exception as e:
+                        print(f"❌ Error fetching sent request profile: {str(e)}")
+                        
                 else:
-                    received_requests.append({**rel, 'profile': rel['requester']})
+                    # User received this request - get requester profile
+                    print(f"📨 Processing received request from: {rel['requester_id']}")
+                    
+                    try:
+                        profile_result = supabase.table('profiles')\
+                            .select('*')\
+                            .eq('id', rel['requester_id'])\
+                            .single()\
+                            .execute()
+                        
+                        if profile_result.data:
+                            received_requests.append({
+                                'id': rel['id'],
+                                'profile': profile_result.data,
+                                'created_at': rel['created_at']
+                            })
+                            print(f"✅ Added received request from: {profile_result.data.get('username', 'Unknown')}")
+                        else:
+                            print(f"❌ No profile found for received request: {rel['requester_id']}")
+                            
+                    except Exception as e:
+                        print(f"❌ Error fetching received request profile: {str(e)}")
+        
+        print(f"🎯 FINAL RESULTS:")
+        print(f"   - Friends: {len(friends)}")
+        print(f"   - Received Requests: {len(received_requests)}")
+        print(f"   - Sent Requests: {len(sent_requests)}")
         
         return render_template("friends.html",
                              friends=friends,
@@ -749,8 +877,15 @@ def friends_list():
                              received_requests=received_requests)
         
     except Exception as e:
-        print(f"Friends list error: {str(e)}")
-        return render_template("friends.html", friends=[], sent_requests=[], received_requests=[])
+        print(f"❌ Friends list error: {str(e)}")
+        import traceback
+        print(f"📋 Full error: {traceback.format_exc()}")
+        return render_template("friends.html", 
+                             friends=[], 
+                             sent_requests=[], 
+                             received_requests=[])
+
+
 
 @app.route("/privacy-settings")
 def privacy_settings():
