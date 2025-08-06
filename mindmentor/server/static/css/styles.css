@@ -2353,3 +2353,61 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
 }
+/* Complete Enhanced Chatbot Button Styles */
+.chatbot-nav-item {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+    border-left: 3px solid #10b981;
+    position: relative;
+    overflow: hidden;
+}
+
+.chatbot-nav-item:hover {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    transform: translateX(4px);
+}
+
+.chatbot-nav-item.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+
+.chatbot-nav-item .nav-icon {
+    animation: chatbotPulse 3s infinite;
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+}
+
+.chatbot-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: badgeBounce 2s infinite;
+}
+
+@keyframes chatbotPulse {
+    0%, 100% { 
+        transform: scale(1);
+        filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+    }
+    50% { 
+        transform: scale(1.05);
+        filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6));
+    }
+}
+
+@keyframes badgeBounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Hide badge after user visits chat */
+.chatbot-nav-item.visited .chatbot-badge {
+    display: none;
+}

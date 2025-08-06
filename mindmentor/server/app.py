@@ -13,6 +13,7 @@ import random
 from dateutil import parser
 from flask import make_response, jsonify
 from helpers import export_user_data
+from routes.chatbot.chatbot_routes import chatbot_bp
 from helpers import (
     get_user_profile_data,
     get_user_mood_stats,
@@ -24,6 +25,8 @@ from helpers import (
     calculate_improvements,
     get_weekly_activity
 )
+
+
 # Setup paths
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -36,6 +39,7 @@ load_dotenv()
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")  # store securely in prod
 CORS(app)
+
 
 # Import blueprints after app creation
 from routes.auth_routes import auth_bp
@@ -50,6 +54,7 @@ app.register_blueprint(mood_bp, url_prefix="/api/mood")
 app.register_blueprint(suggestion_bp, url_prefix="/api/suggestions")
 app.register_blueprint(help_bp)
 app.register_blueprint(checkin_bp)
+app.register_blueprint(chatbot_bp, url_prefix="/chatbot")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # UPDATED: Enhanced tag meanings for all conditions including substance-related ones
