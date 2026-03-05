@@ -3,7 +3,7 @@ import google.generativeai as genai
 import json
 
 # Your Gemini API key
-GEMINI_API_KEY = "AIzaSyD3En9sNvx0jNv4yVCE_d1iV6WNGqV6DLc"
+GEMINI_API_KEY = ""
 genai.configure(api_key=GEMINI_API_KEY)
 
 def generate_ai_suggestions(predicted_tags, input_data, journal_entry=""):
